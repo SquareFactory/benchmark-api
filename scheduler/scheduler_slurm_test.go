@@ -140,6 +140,51 @@ func (suite *ServiceTestSuite) TestFindRunningJobByName() {
 	suite.executor.AssertExpectations(suite.T())
 }
 
+func (suite *ServiceTestSuite) TestFindMemPerNode() {
+	mem := 123
+
+	suite.executor.On(
+		"ExecAs",
+		mock.Anything,
+		admin,
+		mock.MatchedBy(func(cmd string) bool {
+			return strings.Contains(cmd, "scontrol") &&
+				strings.Contains(cmd, "RealMemory=")
+		}),
+	).Return(fmt.Sprintf("%d\n", mem), nil)
+	ctx := context.Background()
+
+	// Act
+	out, err := suite.impl.FindMemPerNode(ctx)
+
+	// Assert
+	suite.NoError(err)
+	suite.Equal(mem, out)
+	suite.executor.AssertExpectations(suite.T())
+}
+
+func (suite *ServiceTestSuite) TestFindGPUPerNode() {
+	gpu := 123
+
+	suite.executor.On(
+		"ExecAs",
+		mock.Anything,
+		admin,
+		mock.MatchedBy(func(cmd string) bool {
+			return strings.Contains(cmd, "scontrol") &&
+				strings.Contains(cmd, "gres/gpu=")
+		}),
+	).Return(fmt.Sprintf("%d\n", gpu), nil)
+	ctx := context.Background()
+
+	// Act
+	out, err := suite.impl.FindGPUPerNode(ctx)
+	// Assert
+	suite.NoError(err)
+	suite.Equal(gpu, out)
+	suite.executor.AssertExpectations(suite.T())
+}
+
 func TestServiceTestSuite(t *testing.T) {
 	suite.Run(t, &ServiceTestSuite{})
 }

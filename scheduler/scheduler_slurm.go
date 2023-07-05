@@ -11,7 +11,7 @@ import (
 	"github.com/squarefactory/benchmark-api/utils"
 )
 
-const QosName = "mining"
+const QosName = "benchmark"
 
 type Slurm struct {
 	executor  Executor

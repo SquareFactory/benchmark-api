@@ -8,7 +8,6 @@ import (
 	"os"
 	"text/template"
 
-	"github.com/squarefactory/benchmark-api/executor"
 	"github.com/squarefactory/benchmark-api/scheduler"
 )
 
@@ -19,17 +18,16 @@ const (
 	DatFilePath                  = "hpl.dat"
 )
 
-func (b *BenchmarkFile) Run(ctx context.Context) error {
-	slurm := scheduler.NewSlurm(&executor.Shell{}, user)
+func (b *Benchmark) Run(ctx context.Context, files *BenchmarkFile) error {
 
-	if err := os.WriteFile(DatFilePath, []byte(b.DatFile), 0644); err != nil {
+	if err := os.WriteFile(DatFilePath, []byte(files.DatFile), 0644); err != nil {
 		return err
 	}
 
-	out, err := slurm.Submit(ctx, &scheduler.SubmitRequest{
+	out, err := b.SlurmClient.Submit(ctx, &scheduler.SubmitRequest{
 		Name: JobName,
 		User: user,
-		Body: b.SbatchFile,
+		Body: files.SbatchFile,
 	})
 	if err != nil {
 		log.Printf("Failed to run benchmark: %s", err)
@@ -40,11 +38,9 @@ func (b *BenchmarkFile) Run(ctx context.Context) error {
 	return nil
 }
 
-func GenerateFiles(ctx context.Context, node int) (BenchmarkFile, error) {
-	slurm := scheduler.NewSlurm(&executor.Shell{}, user)
+func (b *Benchmark) GenerateFiles(ctx context.Context, node int) (BenchmarkFile, error) {
 
-	b, err := CalculateBenchmarkParams(slurm, ctx)
-	if err != nil {
+	if err := b.CalculateBenchmarkParams(ctx); err != nil {
 		log.Printf("Failed to generate benchmark parameters: %s", err)
 		return BenchmarkFile{}, err
 	}
@@ -112,78 +108,70 @@ func (b *Benchmark) GenerateSBATCH(node int) (string, error) {
 }
 
 // Returns a benchmark and all its parameters
-func CalculateBenchmarkParams(slurm *scheduler.Slurm, ctx context.Context) (*Benchmark, error) {
-
-	ProblemSize, err := CalculateProblemSize(slurm, ctx)
-	if err != nil {
-		return nil, err
-	}
-	P, Q, err := CalculateProcessGrid(slurm, ctx)
-	if err != nil {
-		return nil, err
+func (b *Benchmark) CalculateBenchmarkParams(ctx context.Context) error {
+	if err := b.CalculateProblemSize(ctx); err != nil {
+		return err
 	}
 
-	NtasksPerNode := P * Q
-	CpusPerNode, err := slurm.FindCPUPerNode(ctx)
-	if err != nil {
-		return nil, err
-	}
-	CpusPerTasks := CpusPerNode / NtasksPerNode
-
-	GpusPerNode, err := slurm.FindGPUPerNode(ctx)
-	if err != nil {
-		return nil, err
+	if err := b.CalculateProcessGrid(ctx); err != nil {
+		return err
 	}
 
-	b := Benchmark{
-		dat: DATParams{
-			ProblemSize: ProblemSize,
-			P:           P,
-			Q:           Q,
-		},
-		sbatch: SBATCHParams{
-			Node:          1,
-			NtasksPerNode: NtasksPerNode,
-			CpusPerTasks:  CpusPerTasks,
-			GpusPerNode:   GpusPerNode,
-		},
+	b.sbatch.NtasksPerNode = b.dat.P * b.dat.Q
+	CpusPerNode, err := b.SlurmClient.FindCPUPerNode(ctx)
+	if err != nil {
+		return err
 	}
-	return &b, nil
+	b.sbatch.CpusPerTasks = CpusPerNode / b.sbatch.NtasksPerNode
+
+	b.sbatch.GpusPerNode, err = b.SlurmClient.FindGPUPerNode(ctx)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // Calculates the optimal values of P and Q based on the number of GPUs available per snodes
-func CalculateProcessGrid(slurm *scheduler.Slurm, ctx context.Context) (int, int, error) {
+func (b *Benchmark) CalculateProcessGrid(ctx context.Context) error {
 
-	numGPUs, err := slurm.FindGPUPerNode(ctx)
+	numGPUs, err := b.SlurmClient.FindGPUPerNode(ctx)
 	if err != nil {
 		log.Printf("failed to calculate gpus per node : %s", err)
-		return 0, 0, err
+		return err
 	}
 
 	if numGPUs == 1 {
-		return 1, 1, nil
+		b.dat.P = 1
+		b.dat.Q = 1
+		return nil
 	}
 
 	sqrtNumGPUs := int(math.Sqrt(float64(numGPUs)))
 
 	for i := sqrtNumGPUs; i > 0; i-- {
 		if numGPUs%i == 0 && i != 1 {
-			return i, numGPUs / i, nil
+			b.dat.P = i
+			b.dat.Q = numGPUs / i
+			return nil
 		}
 	}
 
-	return 2, numGPUs, nil // If no other valid P is found, default to 2
+	b.dat.P = 2
+	b.dat.Q = numGPUs
+	return nil // If no other valid P is found, default to 2
 }
 
 // Calculates the problem size from the ram available
-func CalculateProblemSize(slurm *scheduler.Slurm, ctx context.Context) (int, error) {
-	mem, err := slurm.FindMemPerNode(ctx)
+func (b *Benchmark) CalculateProblemSize(ctx context.Context) error {
+	mem, err := b.SlurmClient.FindMemPerNode(ctx)
 	if err != nil {
 		log.Printf("failed to calculate problem size: %s", err)
-		return 0, err
+		return err
 	}
 
 	problemSize := math.Sqrt(float64(mem)/8) * benchmarkMemoryUsePercentage
 
-	return int(problemSize), nil
+	b.dat.ProblemSize = int(problemSize)
+	return nil
 }

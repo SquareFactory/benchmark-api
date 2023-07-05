@@ -1,8 +1,8 @@
 #!/bin/sh
 
 #SBATCH -N {{ .Node }}
-#SBATCH --ntasks-per-node={{ .Ntasks }}
-#SBATCH --gpus-per-node={{ .Gpus }}
+#SBATCH --ntasks-per-node={{ .NtasksPerNode }}
+#SBATCH --gpus-per-node={{ .GpusPerNode }}
 #SBATCH --mem=0
 #SBATCH --cpus-per-task={{ .CpusPerTasks }}
 

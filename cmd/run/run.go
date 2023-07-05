@@ -29,13 +29,14 @@ var Command = &cli.Command{
 			return err
 		}
 
-		b, err := benchmark.GenerateFiles(ctx, node)
+		var b benchmark.Benchmark
+		files, err := b.GenerateFiles(ctx, node)
 		if err != nil {
 			log.Printf("Failed to generate benchmark files: %s", err)
 			return err
 		}
 
-		if err := b.Run(ctx); err != nil {
+		if err := b.Run(ctx, &files); err != nil {
 			log.Printf("Failed to run benchmark: %s", err)
 			return err
 		}

@@ -112,7 +112,7 @@ func (s *Slurm) FindMemPerNode(ctx context.Context) (int, error) {
 	lines := strings.Split(out, "\n")
 	mem, err := strconv.Atoi(lines[0])
 	if err != nil {
-		log.Printf("Failed to convert %q to integer: %s", lines[0], err)
+		log.Printf("Failed to convert %s to integer: %s", lines[0], err)
 		return 0, err
 	}
 
@@ -131,9 +131,27 @@ func (s *Slurm) FindGPUPerNode(ctx context.Context) (int, error) {
 	lines := strings.Split(out, "\n")
 	gpu, err := strconv.Atoi(lines[0])
 	if err != nil {
-		log.Printf("Failed to convert %q to integer: %s", lines[0], err)
+		log.Printf("Failed to convert %s to integer: %s", lines[0], err)
 		return 0, err
 	}
 
 	return gpu, nil
+}
+
+func (s *Slurm) FindCPUPerNode(ctx context.Context) (int, error) {
+	cmd := "scontrol show nodes | grep CfgTRES= | sed -E 's|.*cpu=([^,]*).*|\\1|g'"
+	out, err := s.executor.ExecAs(ctx, s.adminUser, cmd)
+	if err != nil {
+		log.Printf("FindCPUPerNode failed : %s", err)
+		return 0, err
+	}
+
+	out = strings.TrimSpace(string(out))
+	lines := strings.Split(out, "\n")
+	cpu, err := strconv.Atoi(lines[0])
+	if err != nil {
+		log.Printf("Failed to convert %s to integer: %s", lines[0], err)
+	}
+
+	return cpu, nil
 }

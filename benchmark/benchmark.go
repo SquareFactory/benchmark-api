@@ -141,25 +141,26 @@ func (b *Benchmark) CalculateProcessGrid(ctx context.Context) error {
 		log.Printf("failed to calculate gpus per node : %s", err)
 		return err
 	}
+	totalGPUS := numGPUs * b.Sbatch.Node
 
-	if numGPUs == 1 {
+	if totalGPUS == 1 {
 		b.Dat.P = 1
 		b.Dat.Q = 1
 		return nil
 	}
 
-	sqrtNumGPUs := int(math.Sqrt(float64(numGPUs)))
+	sqrttotalGPUS := int(math.Sqrt(float64(totalGPUS)))
 
-	for i := sqrtNumGPUs; i > 0; i-- {
-		if numGPUs%i == 0 && i != 1 {
+	for i := sqrttotalGPUS; i > 0; i-- {
+		if totalGPUS%i == 0 && i != 1 {
 			b.Dat.P = i
-			b.Dat.Q = numGPUs / i
+			b.Dat.Q = totalGPUS / i
 			return nil
 		}
 	}
 
 	b.Dat.P = 2
-	b.Dat.Q = numGPUs
+	b.Dat.Q = totalGPUS
 	return nil // If no other valid P is found, default to 2
 }
 

@@ -36,9 +36,9 @@ func (suite *ServiceTestSuite) BeforeTest(suiteName, testName string) {
 			Q:           3,
 		},
 		Sbatch: benchmark.SBATCHParams{
-			Node:          1,
+			Node:          4,
 			NtasksPerNode: 2,
-			GpusPerNode:   2,
+			GpusPerNode:   16,
 			CpusPerTasks:  8,
 		},
 	}
@@ -174,7 +174,7 @@ srun  --mpi=pmix_v4 --cpu-bind=none --gpu-bind=none --container-image="$(pwd)/hp
 
 func (suite *ServiceTestSuite) TestCalculateProcessGrid() {
 	// Arrange
-	P, Q := 2, 2
+	P, Q := 2, 4
 
 	suite.scheduler.On(
 		"FindGPUPerNode",

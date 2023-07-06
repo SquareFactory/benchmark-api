@@ -38,7 +38,7 @@ func (suite *ServiceTestSuite) BeforeTest(suiteName, testName string) {
 		Sbatch: benchmark.SBATCHParams{
 			Node:          4,
 			NtasksPerNode: 2,
-			GpusPerNode:   16,
+			GpusPerNode:   2,
 			CpusPerTasks:  8,
 		},
 	}
@@ -137,7 +137,7 @@ func (suite *ServiceTestSuite) TestGenerateSBATCH() {
 	// Arrange
 	expectedTemplate := `#!/bin/sh
 
-#SBATCH -N 1
+#SBATCH -N 4
 #SBATCH --ntasks-per-node=2
 #SBATCH --gpus-per-node=2
 #SBATCH --mem=0

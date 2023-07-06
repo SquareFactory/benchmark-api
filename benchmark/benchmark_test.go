@@ -172,6 +172,25 @@ srun  --mpi=pmix_v4 --cpu-bind=none --gpu-bind=none --container-image="$(pwd)/hp
 	suite.Equal(expectedBuffer.String(), result)
 }
 
+func (suite *ServiceTestSuite) TestCalculateProcessGrid() {
+	// Arrange
+	P, Q := 2, 2
+
+	suite.scheduler.On(
+		"FindGPUPerNode",
+		mock.Anything,
+	).Return(2)
+
+	// Act
+	err := suite.impl.CalculateProcessGrid(context.Background())
+
+	// Assert
+	suite.NoError(err)
+	suite.scheduler.AssertExpectations(suite.T())
+	suite.Equal(P, suite.impl.Dat.P)
+	suite.Equal(Q, suite.impl.Dat.Q)
+}
+
 func (suite *ServiceTestSuite) TestCalculateProblemSize() {
 	// Arrange
 	expectedMem := 3 // sqrt(128/8)*0.75 = 3

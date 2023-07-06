@@ -20,8 +20,8 @@ type SlurmScheduler interface {
 }
 
 type Benchmark struct {
-	dat         DATParams
-	sbatch      SBATCHParams
+	Dat         DATParams
+	Sbatch      SBATCHParams
 	SlurmClient SlurmScheduler
 }
 

@@ -72,9 +72,9 @@ func (b *Benchmark) GenerateDAT() (string, error) {
 		P           int
 		Q           int
 	}{
-		ProblemSize: b.dat.ProblemSize,
-		P:           b.dat.P,
-		Q:           b.dat.Q,
+		ProblemSize: b.Dat.ProblemSize,
+		P:           b.Dat.P,
+		Q:           b.Dat.Q,
 	}); err != nil {
 		log.Printf("dat templating failed: %s", err)
 		return "", err
@@ -95,9 +95,9 @@ func (b *Benchmark) GenerateSBATCH(node int) (string, error) {
 		NtasksPerNode int
 	}{
 		Node:          node,
-		CpusPerTasks:  b.sbatch.CpusPerTasks,
-		GpusPerNode:   b.sbatch.GpusPerNode,
-		NtasksPerNode: b.sbatch.NtasksPerNode,
+		CpusPerTasks:  b.Sbatch.CpusPerTasks,
+		GpusPerNode:   b.Sbatch.GpusPerNode,
+		NtasksPerNode: b.Sbatch.NtasksPerNode,
 	}); err != nil {
 		log.Printf("sbatch templating failed: %s", err)
 		return "", err
@@ -117,14 +117,14 @@ func (b *Benchmark) CalculateBenchmarkParams(ctx context.Context) error {
 		return err
 	}
 
-	b.sbatch.NtasksPerNode = b.dat.P * b.dat.Q
+	b.Sbatch.NtasksPerNode = b.Dat.P * b.Dat.Q
 	CpusPerNode, err := b.SlurmClient.FindCPUPerNode(ctx)
 	if err != nil {
 		return err
 	}
-	b.sbatch.CpusPerTasks = CpusPerNode / b.sbatch.NtasksPerNode
+	b.Sbatch.CpusPerTasks = CpusPerNode / b.Sbatch.NtasksPerNode
 
-	b.sbatch.GpusPerNode, err = b.SlurmClient.FindGPUPerNode(ctx)
+	b.Sbatch.GpusPerNode, err = b.SlurmClient.FindGPUPerNode(ctx)
 	if err != nil {
 		return err
 	}
@@ -142,8 +142,8 @@ func (b *Benchmark) CalculateProcessGrid(ctx context.Context) error {
 	}
 
 	if numGPUs == 1 {
-		b.dat.P = 1
-		b.dat.Q = 1
+		b.Dat.P = 1
+		b.Dat.Q = 1
 		return nil
 	}
 
@@ -151,14 +151,14 @@ func (b *Benchmark) CalculateProcessGrid(ctx context.Context) error {
 
 	for i := sqrtNumGPUs; i > 0; i-- {
 		if numGPUs%i == 0 && i != 1 {
-			b.dat.P = i
-			b.dat.Q = numGPUs / i
+			b.Dat.P = i
+			b.Dat.Q = numGPUs / i
 			return nil
 		}
 	}
 
-	b.dat.P = 2
-	b.dat.Q = numGPUs
+	b.Dat.P = 2
+	b.Dat.Q = numGPUs
 	return nil // If no other valid P is found, default to 2
 }
 
@@ -172,6 +172,6 @@ func (b *Benchmark) CalculateProblemSize(ctx context.Context) error {
 
 	problemSize := math.Sqrt(float64(mem)/8) * benchmarkMemoryUsePercentage
 
-	b.dat.ProblemSize = int(problemSize)
+	b.Dat.ProblemSize = int(problemSize)
 	return nil
 }

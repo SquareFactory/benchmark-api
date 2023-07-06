@@ -172,9 +172,22 @@ srun  --mpi=pmix_v4 --cpu-bind=none --gpu-bind=none --container-image="$(pwd)/hp
 	suite.Equal(expectedBuffer.String(), result)
 }
 
-func TestCalculateProblemSize() {
+func (suite *ServiceTestSuite) TestCalculateProblemSize() {
 	// Arrange
+	expectedMem := 3 // sqrt(128/8)*0.75 = 3
 
+	suite.scheduler.On(
+		"FindMemPerNode",
+		mock.Anything,
+	).Return(128, nil)
+
+	// Act
+	err := suite.impl.CalculateProblemSize(context.Background())
+
+	// Assert
+	suite.NoError(err)
+	suite.scheduler.AssertExpectations(suite.T())
+	suite.Equal(expectedMem, suite.impl.Dat.ProblemSize)
 }
 
 func TestServiceTestSuite(t *testing.T) {

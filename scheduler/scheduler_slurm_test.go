@@ -149,7 +149,7 @@ func (suite *ServiceTestSuite) TestFindMemPerNode() {
 		admin,
 		mock.MatchedBy(func(cmd string) bool {
 			return strings.Contains(cmd, "scontrol") &&
-				strings.Contains(cmd, "RealMemory=")
+				strings.Contains(cmd, "grep CfgTRES")
 		}),
 	).Return(fmt.Sprintf("%d\n", mem), nil)
 	ctx := context.Background()

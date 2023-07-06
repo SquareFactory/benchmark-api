@@ -95,8 +95,8 @@ func (_m *Scheduler) FindMemPerNode(ctx context.Context) (int, error) {
 		return rf(ctx)
 	}
 
-	if rf, ok := args.Get(0).(func(context.Context) int); ok {
-		return rf(ctx), nil
+	if rf, ok := args.Get(0).(int); ok {
+		return rf, nil
 	}
 
 	if rf, ok := args.Get(1).(error); ok {

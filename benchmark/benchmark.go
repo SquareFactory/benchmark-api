@@ -3,6 +3,7 @@ package benchmark
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"log"
 	"math"
 	"os"
@@ -164,14 +165,15 @@ func (b *Benchmark) CalculateProcessGrid(ctx context.Context) error {
 
 // Calculates the problem size from the ram available
 func (b *Benchmark) CalculateProblemSize(ctx context.Context) error {
+
 	mem, err := b.SlurmClient.FindMemPerNode(ctx)
 	if err != nil {
 		log.Printf("failed to calculate problem size: %s", err)
 		return err
 	}
 
-	problemSize := math.Sqrt(float64(mem)/8) * benchmarkMemoryUsePercentage
+	b.Dat.ProblemSize = int(math.Sqrt(float64(mem)/8) * benchmarkMemoryUsePercentage)
+	fmt.Println(b.Dat.ProblemSize)
 
-	b.Dat.ProblemSize = int(problemSize)
 	return nil
 }

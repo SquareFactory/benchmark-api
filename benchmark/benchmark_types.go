@@ -17,6 +17,7 @@ type SlurmScheduler interface {
 	FindMemPerNode(ctx context.Context) (int, error)
 	FindGPUPerNode(ctx context.Context) (int, error)
 	FindCPUPerNode(ctx context.Context) (int, error)
+	FindCPUAffinity(ctx context.Context) (string, error)
 }
 
 type Benchmark struct {
@@ -41,4 +42,6 @@ type SBATCHParams struct {
 	NtasksPerNode int
 	GpusPerNode   int
 	CpusPerTasks  int
+	GpuAffinity   string
+	CpuAffinity   string
 }

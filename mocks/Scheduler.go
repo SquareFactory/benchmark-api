@@ -142,6 +142,16 @@ func (_m *Scheduler) FindCPUPerNode(ctx context.Context) (int, error) {
 	return 0, nil
 }
 
+func (_m *Scheduler) FindCPUAffinity(ctx context.Context) (string, error) {
+	args := _m.Called(ctx)
+
+	if rf, ok := args.Get(0).(string); ok {
+		return rf, args.Error(1)
+	}
+
+	return "", args.Error(1)
+}
+
 type mockConstructorTestingTNewScheduler interface {
 	mock.TestingT
 	Cleanup(func())

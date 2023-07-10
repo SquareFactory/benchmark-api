@@ -209,6 +209,27 @@ func (suite *ServiceTestSuite) TestCalculateProblemSize() {
 	suite.Equal(expectedMem, suite.impl.Dat.ProblemSize)
 }
 
+func (suite *ServiceTestSuite) TestCalculateAffinity() {
+
+	expectedCpu := "6-7:2-3"
+	expectedGpu := "0:1"
+
+	affinity := `0 6-7
+1 2-3`
+
+	suite.scheduler.On(
+		"FindCPUAffinity",
+		mock.Anything,
+	).Return(affinity, nil)
+
+	err := suite.impl.CalculateAffinity(context.Background())
+
+	suite.NoError(err)
+	suite.scheduler.AssertExpectations(suite.T())
+	suite.Equal(expectedCpu, suite.impl.Sbatch.CpuAffinity)
+	suite.Equal(expectedGpu, suite.impl.Sbatch.GpuAffinity)
+}
+
 func TestServiceTestSuite(t *testing.T) {
 	suite.Run(t, &ServiceTestSuite{})
 }

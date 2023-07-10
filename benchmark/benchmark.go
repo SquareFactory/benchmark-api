@@ -7,6 +7,8 @@ import (
 	"log"
 	"math"
 	"os"
+	"regexp"
+	"strings"
 	"text/template"
 
 	"github.com/squarefactory/benchmark-api/scheduler"
@@ -175,6 +177,50 @@ func (b *Benchmark) CalculateProblemSize(ctx context.Context) error {
 
 	b.Dat.ProblemSize = int(math.Sqrt(float64(mem)/8) * benchmarkMemoryUsePercentage)
 	fmt.Println(b.Dat.ProblemSize)
+
+	return nil
+}
+
+func (b *Benchmark) CalculateAffinity(ctx context.Context) error {
+
+	out, err := b.SlurmClient.FindCPUAffinity(ctx)
+	if err != nil {
+		log.Printf("failed to calculate cpu affinity: %s", err)
+		return err
+	}
+	gpusPerTasks := b.Sbatch.NtasksPerNode / b.Sbatch.GpusPerNode
+
+	pattern := `(\d+)\s+(\d+-\d+)`
+	re := regexp.MustCompile(pattern)
+	matches := re.FindAllStringSubmatch(out, -1)
+
+	// Process the matches
+	var cpuAffinityValues []string
+	var gpuAffinityValues []string
+
+	for _, match := range matches {
+		cpuAffinity := match[2]
+		gpuAffinity := match[1]
+
+		// Generate the CPU affinity value by repeating the CPU affinity value for the given number of tasks per GPU
+		cpu := strings.Repeat(cpuAffinity+":", gpusPerTasks)
+		cpuAffinityValues = append(
+			cpuAffinityValues,
+			cpu[:len(cpu)-1],
+		) // Remove the trailing colon
+
+		// Generate the GPU affinity value by repeating the CPU affinity value for the given number of tasks per GPU
+		gpu := strings.Repeat(gpuAffinity+":", gpusPerTasks)
+		gpuAffinityValues = append(
+			gpuAffinityValues,
+			gpu[:len(gpu)-1],
+		) // Remove the trailing colon
+
+	}
+
+	// Join the GPU affinity values with a colon
+	b.Sbatch.CpuAffinity = strings.Join(cpuAffinityValues, ":")
+	b.Sbatch.GpuAffinity = strings.Join(gpuAffinityValues, ":")
 
 	return nil
 }

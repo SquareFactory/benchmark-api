@@ -155,7 +155,7 @@ srun  --mpi=pmix_v4 --cpu-bind=none --gpu-bind=none --container-image="$(pwd)/hp
 `
 
 	// Act
-	result, err := suite.impl.GenerateSBATCH(suite.impl.Sbatch.Node)
+	result, err := suite.impl.GenerateSBATCH()
 
 	// Assert
 	suite.NoError(err)

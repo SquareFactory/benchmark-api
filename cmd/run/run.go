@@ -29,8 +29,8 @@ var Command = &cli.Command{
 			return err
 		}
 
-		b := benchmark.NewBenchmark(benchmark.DATParams{}, benchmark.SBATCHParams{})
-		files, err := b.GenerateFiles(ctx, node)
+		b := benchmark.NewBenchmark(benchmark.DATParams{}, benchmark.SBATCHParams{Node: node})
+		files, err := b.GenerateFiles(ctx)
 		if err != nil {
 			log.Printf("Failed to generate benchmark files: %s", err)
 			return err

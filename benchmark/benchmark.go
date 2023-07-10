@@ -55,7 +55,7 @@ func (b *Benchmark) Run(ctx context.Context, files *BenchmarkFile) error {
 	return nil
 }
 
-func (b *Benchmark) GenerateFiles(ctx context.Context, node int) (BenchmarkFile, error) {
+func (b *Benchmark) GenerateFiles(ctx context.Context) (BenchmarkFile, error) {
 
 	if err := b.CalculateBenchmarkParams(ctx); err != nil {
 		log.Printf("Failed to generate benchmark parameters: %s", err)
@@ -67,7 +67,7 @@ func (b *Benchmark) GenerateFiles(ctx context.Context, node int) (BenchmarkFile,
 		log.Printf("Failed to generate DAT file: %s", err)
 		return BenchmarkFile{}, err
 	}
-	SbatchFile, err := b.GenerateSBATCH(node)
+	SbatchFile, err := b.GenerateSBATCH()
 	if err != nil {
 		log.Printf("Failed to generate SBATCH file: %s", err)
 		return BenchmarkFile{}, err
@@ -100,7 +100,7 @@ func (b *Benchmark) GenerateDAT() (string, error) {
 	return DatFile.String(), nil
 }
 
-func (b *Benchmark) GenerateSBATCH(node int) (string, error) {
+func (b *Benchmark) GenerateSBATCH() (string, error) {
 
 	// Templating gpu mining job
 	SbatchTmpl := template.Must(template.New("jobTemplate").Parse(SbatchTmpl))
@@ -113,7 +113,7 @@ func (b *Benchmark) GenerateSBATCH(node int) (string, error) {
 		GpuAffinity   string
 		CpuAffinity   string
 	}{
-		Node:          node,
+		Node:          b.Sbatch.Node,
 		CpusPerTasks:  b.Sbatch.CpusPerTasks,
 		GpusPerNode:   b.Sbatch.GpusPerNode,
 		NtasksPerNode: b.Sbatch.NtasksPerNode,

@@ -3,7 +3,6 @@ package benchmark
 import (
 	"bytes"
 	"context"
-	"fmt"
 	"log"
 	"math"
 	"os"
@@ -11,6 +10,7 @@ import (
 	"strings"
 	"text/template"
 
+	"github.com/squarefactory/benchmark-api/executor"
 	"github.com/squarefactory/benchmark-api/scheduler"
 )
 
@@ -20,6 +20,20 @@ const (
 	JobName                      = "HPL-Benchmark"
 	DatFilePath                  = "hpl.dat"
 )
+
+func NewBenchmark(
+	dat DATParams,
+	sbatch SBATCHParams,
+) *Benchmark {
+
+	slurm := scheduler.NewSlurm(&executor.Shell{}, user)
+
+	return &Benchmark{
+		Dat:         dat,
+		Sbatch:      sbatch,
+		SlurmClient: slurm,
+	}
+}
 
 func (b *Benchmark) Run(ctx context.Context, files *BenchmarkFile) error {
 
@@ -184,7 +198,6 @@ func (b *Benchmark) CalculateProblemSize(ctx context.Context) error {
 	}
 
 	b.Dat.ProblemSize = int(math.Sqrt(float64(mem)/8) * benchmarkMemoryUsePercentage)
-	fmt.Println(b.Dat.ProblemSize)
 
 	return nil
 }

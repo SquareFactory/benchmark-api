@@ -160,7 +160,7 @@ func (s *Slurm) FindCPUPerNode(ctx context.Context) (int, error) {
 }
 
 func (s *Slurm) FindCPUAffinity(ctx context.Context) (string, error) {
-	cmd := "nvidia-smi topo -m | grep -E '^GPU[0-9]+' | awk -F'\t' '{gsub('GPU','',$1); print $1, $7}'"
+	cmd := "nvidia-smi topo -m | grep -E '^GPU[0-9]+' | awk -F'\\t' '{gsub('GPU','',$1); print $1, $7}'"
 	out, err := s.executor.ExecAs(ctx, s.adminUser, cmd)
 	if err != nil {
 		log.Printf("FindCPUAffinity failed : %s", err)

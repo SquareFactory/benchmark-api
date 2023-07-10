@@ -17,6 +17,7 @@ import (
 const (
 	user                         = "root"
 	benchmarkMemoryUsePercentage = 0.75
+	GBtoMB                       = 1000
 	JobName                      = "HPL-Benchmark"
 	DatFilePath                  = "hpl.dat"
 )
@@ -201,7 +202,7 @@ func (b *Benchmark) CalculateProblemSize(ctx context.Context) error {
 		return err
 	}
 
-	b.Dat.ProblemSize = int(math.Sqrt(float64(mem)/8) * benchmarkMemoryUsePercentage)
+	b.Dat.ProblemSize = int(math.Sqrt(float64(mem)/8)*benchmarkMemoryUsePercentage) * GBtoMB
 
 	return nil
 }

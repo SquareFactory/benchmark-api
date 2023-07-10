@@ -197,12 +197,12 @@ func (suite *ServiceTestSuite) TestCalculateProcessGrid() {
 
 func (suite *ServiceTestSuite) TestCalculateProblemSize() {
 	// Arrange
-	expectedMem := 3 // sqrt(128/8)*0.75 = 3
+	expectedMem := 95000
 
 	suite.scheduler.On(
 		"FindMemPerNode",
 		mock.Anything,
-	).Return(128, nil)
+	).Return(128460, nil)
 
 	// Act
 	err := suite.impl.CalculateProblemSize(context.Background())

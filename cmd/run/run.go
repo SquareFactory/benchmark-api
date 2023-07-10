@@ -13,7 +13,7 @@ import (
 
 var flags = []cli.Flag{
 	&cli.StringFlag{
-		Name:  "container path",
+		Name:  "container",
 		Value: "/etc/hpl-benchmark/hpc-benchmarks:hpl.sqsh",
 		EnvVars: []string{
 			"CONTAINER_PATH",

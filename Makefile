@@ -43,10 +43,7 @@ bin/benchmark-api-linux-riscv64: $(GO_SRCS) set-version
 bin/benchmark-api-linux-s390x: $(GO_SRCS) set-version
 	CGO_ENABLED=0 GOOS=linux GOARCH=s390x go build -ldflags "-s -w -X main.version=${VERSION}" -o "$@" ./cmd/main.go
 
-bin/benchmark-api-windows-amd64.exe: $(GO_SRCS) set-version
-	CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -ldflags "-s -w -X main.version=${VERSION}" -o "$@" ./cmd/main.go
-
-bins := benchmark-api-darwin-amd64 benchmark-api-darwin-arm64 benchmark-api-freebsd-arm64 benchmark-api-freebsd-arm64 benchmark-api-linux-amd64 benchmark-api-linux-arm64 benchmark-api-linux-mips64 benchmark-api-linux-mips64le benchmark-api-linux-ppc64 benchmark-api-linux-ppc64le benchmark-api-linux-riscv64 benchmark-api-linux-s390x benchmark-api-windows-amd64.exe
+bins := benchmark-api-darwin-amd64 benchmark-api-darwin-arm64 benchmark-api-freebsd-arm64 benchmark-api-freebsd-arm64 benchmark-api-linux-amd64 benchmark-api-linux-arm64 benchmark-api-linux-mips64 benchmark-api-linux-mips64le benchmark-api-linux-ppc64 benchmark-api-linux-ppc64le benchmark-api-linux-riscv64 benchmark-api-linux-s390x
 
 bin/checksums.txt: $(addprefix bin/,$(bins))
 	sha256sum -b $(addprefix bin/,$(bins)) | sed 's/bin\///' > $@

@@ -40,6 +40,8 @@ func (suite *ServiceTestSuite) BeforeTest(suiteName, testName string) {
 			NtasksPerNode: 2,
 			GpusPerNode:   2,
 			CpusPerTasks:  8,
+			CpuAffinity:   "6-7:2-3",
+			GpuAffinity:   "0:1",
 		},
 	}
 
@@ -149,7 +151,7 @@ export OMPI_MCA_pml=ob1
 export OMPI_MCA_btl=vader,self,tcp
 
 srun  --mpi=pmix_v4 --cpu-bind=none --gpu-bind=none --container-image="$(pwd)/hpc-benchmarks:21.4-hpl.sqsh" \
-  --container-mounts="$(pwd)/hpl.dat:/test.dat" sh -c 'sed -Ei "s/:1//g" ./hpl.sh && ./hpl.sh --xhpl-ai --cpu-affinity 6-7:6-7:2-3:2-3 --cpu-cores-per-rank 8 --gpu-affinity 0:0:1:1 --dat "/test.dat"'
+  --container-mounts="$(pwd)/hpl.dat:/test.dat" sh -c 'sed -Ei "s/:1//g" ./hpl.sh && ./hpl.sh --xhpl-ai --cpu-affinity 6-7:2-3 --cpu-cores-per-rank 8 --gpu-affinity 0:1 --dat "/test.dat"'
 `
 
 	// Act

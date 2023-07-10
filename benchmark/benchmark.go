@@ -96,11 +96,15 @@ func (b *Benchmark) GenerateSBATCH(node int) (string, error) {
 		CpusPerTasks  int
 		GpusPerNode   int
 		NtasksPerNode int
+		GpuAffinity   string
+		CpuAffinity   string
 	}{
 		Node:          node,
 		CpusPerTasks:  b.Sbatch.CpusPerTasks,
 		GpusPerNode:   b.Sbatch.GpusPerNode,
 		NtasksPerNode: b.Sbatch.NtasksPerNode,
+		GpuAffinity:   b.Sbatch.GpuAffinity,
+		CpuAffinity:   b.Sbatch.CpuAffinity,
 	}); err != nil {
 		log.Printf("sbatch templating failed: %s", err)
 		return "", err
@@ -129,6 +133,10 @@ func (b *Benchmark) CalculateBenchmarkParams(ctx context.Context) error {
 
 	b.Sbatch.GpusPerNode, err = b.SlurmClient.FindGPUPerNode(ctx)
 	if err != nil {
+		return err
+	}
+
+	if err := b.CalculateAffinity(ctx); err != nil {
 		return err
 	}
 

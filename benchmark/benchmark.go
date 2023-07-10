@@ -106,6 +106,8 @@ func (b *Benchmark) GenerateSBATCH() (string, error) {
 	SbatchTmpl := template.Must(template.New("jobTemplate").Parse(SbatchTmpl))
 	var SbatchFile bytes.Buffer
 	if err := SbatchTmpl.Execute(&SbatchFile, struct {
+		ContainerPath string
+		Workspace     string
 		Node          int
 		CpusPerTasks  int
 		GpusPerNode   int
@@ -113,6 +115,8 @@ func (b *Benchmark) GenerateSBATCH() (string, error) {
 		GpuAffinity   string
 		CpuAffinity   string
 	}{
+		ContainerPath: b.Sbatch.ContainerPath,
+		Workspace:     b.Sbatch.Workspace,
 		Node:          b.Sbatch.Node,
 		CpusPerTasks:  b.Sbatch.CpusPerTasks,
 		GpusPerNode:   b.Sbatch.GpusPerNode,

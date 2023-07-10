@@ -38,6 +38,8 @@ type DATParams struct {
 }
 
 type SBATCHParams struct {
+	ContainerPath string
+	Workspace     string
 	Node          int
 	NtasksPerNode int
 	GpusPerNode   int

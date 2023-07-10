@@ -3,13 +3,37 @@ package run
 import (
 	"errors"
 	"log"
+	"os"
+	"path/filepath"
 	"strconv"
 
 	"github.com/squarefactory/benchmark-api/benchmark"
 	"github.com/urfave/cli/v2"
 )
 
-var flags = []cli.Flag{}
+var flags = []cli.Flag{
+	&cli.StringFlag{
+		Name:  "container path",
+		Value: "/etc/hpl-benchmark/hpc-benchmarks:hpl.sqsh",
+		EnvVars: []string{
+			"CONTAINER_PATH",
+		},
+		Aliases: []string{"c"},
+		Action: func(ctx *cli.Context, s string) error {
+			info, err := os.Stat(s)
+			if err != nil {
+				return err
+			}
+			perms := info.Mode().Perm()
+			if perms&0o077 != 0 {
+				log.Fatal(
+					"incorrect permissions for container .sqsh, must be user-only",
+				)
+			}
+			return nil
+		},
+	},
+}
 
 var Command = &cli.Command{
 	Name:      "run",
@@ -29,7 +53,17 @@ var Command = &cli.Command{
 			return err
 		}
 
-		b := benchmark.NewBenchmark(benchmark.DATParams{}, benchmark.SBATCHParams{Node: node})
+		containerPath := os.Getenv("CONTAINER_PATH")
+		workspace := filepath.Dir(containerPath)
+
+		b := benchmark.NewBenchmark(
+			benchmark.DATParams{},
+			benchmark.SBATCHParams{
+				Node:          node,
+				ContainerPath: containerPath,
+				Workspace:     workspace,
+			},
+		)
 		files, err := b.GenerateFiles(ctx)
 		if err != nil {
 			log.Printf("Failed to generate benchmark files: %s", err)

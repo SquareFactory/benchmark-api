@@ -203,8 +203,8 @@ func (b *Benchmark) CalculateProblemSize(ctx context.Context) error {
 	}
 
 	b.Dat.ProblemSize = int(
-		math.Sqrt(float64(mem)/8)*benchmarkMemoryUsePercentage,
-	) * GBtoMB * b.Sbatch.Node
+		math.Sqrt(float64(mem*b.Sbatch.Node)/8)*benchmarkMemoryUsePercentage,
+	) * GBtoMB
 
 	return nil
 }

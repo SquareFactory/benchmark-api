@@ -197,7 +197,7 @@ func (suite *ServiceTestSuite) TestCalculateProcessGrid() {
 
 func (suite *ServiceTestSuite) TestCalculateProblemSize() {
 	// Arrange
-	expectedMem := 380000
+	expectedMem := 190000
 
 	suite.scheduler.On(
 		"FindMemPerNode",

@@ -143,7 +143,7 @@ func (b *Benchmark) CalculateBenchmarkParams(ctx context.Context) error {
 		return err
 	}
 
-	b.Sbatch.NtasksPerNode = b.Dat.P * b.Dat.Q
+	b.Sbatch.NtasksPerNode = b.Dat.P * b.Dat.Q / b.Sbatch.Node
 	CpusPerNode, err := b.SlurmClient.FindCPUPerNode(ctx)
 	if err != nil {
 		return err

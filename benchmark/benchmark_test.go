@@ -146,6 +146,7 @@ func (suite *ServiceTestSuite) TestGenerateSBATCH() {
 #SBATCH --gpus-per-node=2
 #SBATCH --mem=0
 #SBATCH --cpus-per-task=8
+#SBATCH --gpus-per-task=1
 
 export PMIX_MCA_pml=ob1
 export PMIX_MCA_btl=vader,self,tcp

@@ -5,6 +5,7 @@
 #SBATCH --gpus-per-node={{ .GpusPerNode }}
 #SBATCH --mem=0
 #SBATCH --cpus-per-task={{ .CpusPerTasks }}
+#SBATCH --gpus-per-task=1
 
 export PMIX_MCA_pml=ob1
 export PMIX_MCA_btl=vader,self,tcp

@@ -10,7 +10,6 @@ import (
 	"strings"
 	"text/template"
 
-	"github.com/squarefactory/benchmark-api/executor"
 	"github.com/squarefactory/benchmark-api/scheduler"
 )
 
@@ -25,10 +24,8 @@ const (
 func NewBenchmark(
 	dat DATParams,
 	sbatch SBATCHParams,
+	slurm SlurmScheduler,
 ) *Benchmark {
-
-	slurm := scheduler.NewSlurm(&executor.Shell{}, user)
-
 	return &Benchmark{
 		Dat:         dat,
 		Sbatch:      sbatch,

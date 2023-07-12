@@ -8,12 +8,18 @@ import (
 	"strconv"
 
 	"github.com/squarefactory/benchmark-api/benchmark"
+	"github.com/squarefactory/benchmark-api/executor"
+	"github.com/squarefactory/benchmark-api/scheduler"
 	"github.com/urfave/cli/v2"
+)
+
+const (
+	user = "root"
 )
 
 var flags = []cli.Flag{
 	&cli.StringFlag{
-		Name:  "container",
+		Name:  "container.path",
 		Value: "/etc/hpl-benchmark/hpc-benchmarks:hpl.sqsh",
 		EnvVars: []string{
 			"CONTAINER_PATH",
@@ -46,6 +52,7 @@ var Command = &cli.Command{
 		if cCtx.NArg() < 1 {
 			return errors.New("not enough arguments")
 		}
+
 		arg := cCtx.Args().Get(0)
 		node, err := strconv.Atoi(arg)
 		if err != nil {
@@ -63,7 +70,9 @@ var Command = &cli.Command{
 				ContainerPath: containerPath,
 				Workspace:     workspace,
 			},
+			scheduler.NewSlurm(&executor.Shell{}, user),
 		)
+
 		files, err := b.GenerateFiles(ctx)
 		if err != nil {
 			log.Printf("Failed to generate benchmark files: %s", err)
@@ -74,6 +83,7 @@ var Command = &cli.Command{
 			log.Printf("Failed to run benchmark: %s", err)
 			return err
 		}
+
 		return nil
 	},
 }

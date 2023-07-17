@@ -158,7 +158,7 @@ srun  --mpi=pmix_v4 --cpu-bind=none --gpu-bind=none --container-image="/etc/hpl-
 `
 
 	// Act
-	result, err := suite.impl.GenerateSBATCH()
+	result, err := suite.impl.GenerateMultiNodeSBATCH()
 
 	// Assert
 	suite.NoError(err)

@@ -1,0 +1,15 @@
+#!/bin/sh
+
+#SBATCH -N {{ .Node }}
+#SBATCH --ntasks-per-node={{ .NtasksPerNode }}
+#SBATCH --gpus-per-node={{ .GpusPerNode }}
+#SBATCH --mem=0
+#SBATCH --cpus-per-task={{ .CpusPerTasks }}
+
+export PMIX_MCA_pml=ob1
+export PMIX_MCA_btl=vader,self,tcp
+export OMPI_MCA_pml=ob1
+export OMPI_MCA_btl=vader,self,tcp
+
+srun  --mpi=pmix_v4 --cpu-bind=none --gpu-bind=none --container-image="{{ .ContainerPath }}" \
+  --container-mounts="{{ .Workspace }}/hpl.dat:/test.dat" sh -c 'sed -Ei "s/:1//g" ./hpl.sh && ./hpl.sh --xhpl-ai --cpu-affinity {{ .CpuAffinity }} --cpu-cores-per-rank {{ .CpusPerTasks }} --gpu-affinity {{ .GpuAffinity }} --dat "/test.dat"'

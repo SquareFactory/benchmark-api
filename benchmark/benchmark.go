@@ -65,10 +65,21 @@ func (b *Benchmark) GenerateFiles(ctx context.Context) (BenchmarkFile, error) {
 		log.Printf("Failed to generate DAT file: %s", err)
 		return BenchmarkFile{}, err
 	}
-	SbatchFile, err := b.GenerateSBATCH()
-	if err != nil {
-		log.Printf("Failed to generate SBATCH file: %s", err)
-		return BenchmarkFile{}, err
+
+	var SbatchFile string
+
+	if b.Sbatch.Node != 1 {
+		SbatchFile, err = b.GenerateMultiNodeSBATCH()
+		if err != nil {
+			log.Printf("Failed to generate SBATCH file: %s", err)
+			return BenchmarkFile{}, err
+		}
+	} else {
+		SbatchFile, err = b.GenerateSingleNodeSBATCH()
+		if err != nil {
+			log.Printf("Failed to generate SBATCH file: %s", err)
+			return BenchmarkFile{}, err
+		}
 	}
 
 	return BenchmarkFile{
@@ -98,10 +109,10 @@ func (b *Benchmark) GenerateDAT() (string, error) {
 	return DatFile.String(), nil
 }
 
-func (b *Benchmark) GenerateSBATCH() (string, error) {
+func (b *Benchmark) GenerateMultiNodeSBATCH() (string, error) {
 
 	// Templating gpu mining job
-	SbatchTmpl := template.Must(template.New("jobTemplate").Parse(SbatchTmpl))
+	SbatchTmpl := template.Must(template.New("jobTemplate").Parse(MultiNodeTmpl))
 	var SbatchFile bytes.Buffer
 	if err := SbatchTmpl.Execute(&SbatchFile, struct {
 		ContainerPath string
@@ -128,6 +139,36 @@ func (b *Benchmark) GenerateSBATCH() (string, error) {
 
 	return SbatchFile.String(), nil
 
+}
+
+func (b *Benchmark) GenerateSingleNodeSBATCH() (string, error) {
+	// Templating gpu mining job
+	SbatchTmpl := template.Must(template.New("jobTemplate").Parse(SingleNodeTmpl))
+	var SbatchFile bytes.Buffer
+	if err := SbatchTmpl.Execute(&SbatchFile, struct {
+		ContainerPath string
+		Workspace     string
+		Node          int
+		CpusPerTasks  int
+		GpusPerNode   int
+		NtasksPerNode int
+		GpuAffinity   string
+		CpuAffinity   string
+	}{
+		ContainerPath: b.Sbatch.ContainerPath,
+		Workspace:     b.Sbatch.Workspace,
+		Node:          b.Sbatch.Node,
+		CpusPerTasks:  b.Sbatch.CpusPerTasks,
+		GpusPerNode:   b.Sbatch.GpusPerNode,
+		NtasksPerNode: b.Sbatch.NtasksPerNode,
+		GpuAffinity:   b.Sbatch.GpuAffinity,
+		CpuAffinity:   b.Sbatch.CpuAffinity,
+	}); err != nil {
+		log.Printf("sbatch templating failed: %s", err)
+		return "", err
+	}
+
+	return SbatchFile.String(), nil
 }
 
 // Returns a benchmark and all its parameters

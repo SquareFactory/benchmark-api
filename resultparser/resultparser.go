@@ -10,10 +10,18 @@ import (
 var outputFile = "benchmark.csv"
 
 func WriteResultsToCSV(inputFile string) error {
+	wd, err := os.Getwd()
+	if err != nil {
+		log.Printf("Failed to get working directory: %s", err)
+		return err
+	}
+	log.Printf("Working Directory: %s", wd)
+
 	// Read the input file contents
 	inputBytes, err := os.ReadFile(inputFile)
 	if err != nil {
-		log.Fatalf("Failed to read input file: %s", err)
+		log.Printf("Failed to read input file: %s", err)
+		return err
 	}
 
 	// Convert the input file contents to string
@@ -25,7 +33,8 @@ func WriteResultsToCSV(inputFile string) error {
 	// Create the output file
 	output, err := os.Create(outputFile)
 	if err != nil {
-		log.Fatalf("Failed to create output file: %s", err)
+		log.Printf("Failed to create output file: %s", err)
+		return err
 	}
 	defer output.Close()
 
@@ -47,7 +56,8 @@ func WriteResultsToCSV(inputFile string) error {
 	}
 	err = writer.Write(header)
 	if err != nil {
-		log.Fatalf("Failed to write CSV header: %s", err)
+		log.Printf("Failed to write CSV header: %s", err)
+		return err
 	}
 
 	// Process each line and extract the required values
@@ -83,7 +93,8 @@ func WriteResultsToCSV(inputFile string) error {
 
 			err = writer.Write(record)
 			if err != nil {
-				log.Fatalf("Failed to write CSV record: %s", err)
+				log.Printf("Failed to write CSV record: %s", err)
+				return err
 			}
 		}
 	}

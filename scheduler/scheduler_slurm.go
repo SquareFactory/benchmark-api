@@ -11,7 +11,11 @@ import (
 	"github.com/squarefactory/benchmark-api/utils"
 )
 
-const QosName = "benchmark"
+const (
+	User    = "root"
+	JobName = "HPL-Benchmark"
+	QosName = "benchmark"
+)
 
 type Slurm struct {
 	executor  Executor
@@ -164,6 +168,25 @@ func (s *Slurm) FindCPUAffinity(ctx context.Context) (string, error) {
 	out, err := s.executor.ExecAs(ctx, s.adminUser, cmd)
 	if err != nil {
 		log.Printf("FindCPUAffinity failed : %s", err)
+		return "", err
+	}
+
+	return out, nil
+}
+
+func (s *Slurm) FindJobOutputFile(ctx context.Context) (string, error) {
+	jobID, err := s.FindRunningJobByName(ctx, &FindRunningJobByNameRequest{
+		Name: JobName,
+		User: User,
+	})
+	if err != nil {
+		log.Printf("failed to get jobID: %s", err)
+	}
+
+	cmd := fmt.Sprintf("scontrol show job %d | sed -n 's/^\\s*StdOut=\\(.*\\)$/\\1/p'", jobID)
+	out, err := s.executor.ExecAs(ctx, s.adminUser, cmd)
+	if err != nil {
+		log.Printf("FindCPUPerNode failed : %s", err)
 		return "", err
 	}
 

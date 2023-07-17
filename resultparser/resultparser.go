@@ -1,7 +1,6 @@
 package resultparser
 
 import (
-	"bufio"
 	"encoding/csv"
 	"log"
 	"os"
@@ -11,20 +10,22 @@ import (
 var outputFile = "benchmark.csv"
 
 func WriteResultsToCSV(inputFile string) error {
-
-	// Open the input file
-	input, err := os.Open(inputFile)
+	// Read the input file contents
+	inputBytes, err := os.ReadFile(inputFile)
 	if err != nil {
-		log.Printf("Failed to open input file: %s", err)
-		return err
+		log.Fatalf("Failed to read input file: %s", err)
 	}
-	defer input.Close()
+
+	// Convert the input file contents to string
+	inputData := string(inputBytes)
+
+	// Split the input data into lines
+	lines := strings.Split(inputData, "\n")
 
 	// Create the output file
 	output, err := os.Create(outputFile)
 	if err != nil {
-		log.Printf("Failed to create output file: %s", err)
-		return err
+		log.Fatalf("Failed to create output file: %s", err)
 	}
 	defer output.Close()
 
@@ -32,7 +33,6 @@ func WriteResultsToCSV(inputFile string) error {
 	writer := csv.NewWriter(output)
 	defer writer.Flush()
 
-	// Write the CSV header
 	header := []string{
 		"Identifier",
 		"ProblemSize",
@@ -47,16 +47,12 @@ func WriteResultsToCSV(inputFile string) error {
 	}
 	err = writer.Write(header)
 	if err != nil {
-		log.Printf("Failed to write CSV header: %s", err)
-		return err
+		log.Fatalf("Failed to write CSV header: %s", err)
 	}
 
-	// Read the input file line by line
-	scanner := bufio.NewScanner(input)
-	for scanner.Scan() {
-		line := scanner.Text()
-
-		// Check if the line starts with 'HPL_AI'
+	// Process each line and extract the required values
+	for _, line := range lines {
+		line = strings.TrimSpace(line)
 		if strings.HasPrefix(line, "HPL_AI") {
 			// Split the line into fields
 			fields := strings.Fields(line)
@@ -84,17 +80,12 @@ func WriteResultsToCSV(inputFile string) error {
 				iter,
 				gflops_wrefinement,
 			}
+
 			err = writer.Write(record)
 			if err != nil {
-				log.Printf("Failed to write CSV record: %s", err)
-				return err
+				log.Fatalf("Failed to write CSV record: %s", err)
 			}
 		}
-	}
-
-	if err := scanner.Err(); err != nil {
-		log.Printf("Failed to read input file: %s", err)
-		return err
 	}
 
 	log.Printf("Data has been successfully written to %s", outputFile)

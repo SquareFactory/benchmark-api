@@ -152,6 +152,16 @@ func (_m *Scheduler) FindCPUAffinity(ctx context.Context) (string, error) {
 	return "", args.Error(1)
 }
 
+func (_m *Scheduler) FindJobOutputFile(ctx context.Context, jobID int) (string, error) {
+	args := _m.Called(ctx)
+
+	if rf, ok := args.Get(0).(string); ok {
+		return rf, args.Error(1)
+	}
+
+	return "", args.Error(1)
+}
+
 type mockConstructorTestingTNewScheduler interface {
 	mock.TestingT
 	Cleanup(func())

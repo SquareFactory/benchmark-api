@@ -18,6 +18,7 @@ type SlurmScheduler interface {
 	FindGPUPerNode(ctx context.Context) (int, error)
 	FindCPUPerNode(ctx context.Context) (int, error)
 	FindCPUAffinity(ctx context.Context) (string, error)
+	FindJobOutputFile(ctx context.Context, jobID int) (string, error)
 }
 
 type Benchmark struct {

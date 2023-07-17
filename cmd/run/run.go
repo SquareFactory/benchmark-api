@@ -84,6 +84,11 @@ var Command = &cli.Command{
 			return err
 		}
 
+		if err := b.ProcessResults(ctx); err != nil {
+			log.Printf("Failed to process results: %s", err)
+			return err
+		}
+
 		return nil
 	},
 }

@@ -10,19 +10,21 @@ import (
 
 var outputFile = "benchmark.csv"
 
-func WriteResultsToCSV(inputFile string) {
+func WriteResultsToCSV(inputFile string) error {
 
 	// Open the input file
 	input, err := os.Open(inputFile)
 	if err != nil {
-		log.Fatalf("Failed to open input file: %s", err)
+		log.Printf("Failed to open input file: %s", err)
+		return err
 	}
 	defer input.Close()
 
 	// Create the output file
 	output, err := os.Create(outputFile)
 	if err != nil {
-		log.Fatalf("Failed to create output file: %s", err)
+		log.Printf("Failed to create output file: %s", err)
+		return err
 	}
 	defer output.Close()
 
@@ -45,7 +47,8 @@ func WriteResultsToCSV(inputFile string) {
 	}
 	err = writer.Write(header)
 	if err != nil {
-		log.Fatalf("Failed to write CSV header: %s", err)
+		log.Printf("Failed to write CSV header: %s", err)
+		return err
 	}
 
 	// Read the input file line by line
@@ -59,7 +62,6 @@ func WriteResultsToCSV(inputFile string) {
 			fields := strings.Fields(line)
 
 			// Extract the required values
-			identifier := fields[1]
 			problemsize := fields[2]
 			nb := fields[3]
 			p := fields[4]
@@ -72,7 +74,6 @@ func WriteResultsToCSV(inputFile string) {
 
 			// Write the extracted values to the CSV file
 			record := []string{
-				identifier,
 				problemsize,
 				nb,
 				p,
@@ -85,14 +86,17 @@ func WriteResultsToCSV(inputFile string) {
 			}
 			err = writer.Write(record)
 			if err != nil {
-				log.Fatalf("Failed to write CSV record: %s", err)
+				log.Printf("Failed to write CSV record: %s", err)
+				return err
 			}
 		}
 	}
 
 	if err := scanner.Err(); err != nil {
-		log.Fatalf("Failed to read input file: %s", err)
+		log.Printf("Failed to read input file: %s", err)
+		return err
 	}
 
 	log.Printf("Data has been successfully written to %s", outputFile)
+	return nil
 }

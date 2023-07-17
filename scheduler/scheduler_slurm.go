@@ -174,14 +174,7 @@ func (s *Slurm) FindCPUAffinity(ctx context.Context) (string, error) {
 	return out, nil
 }
 
-func (s *Slurm) FindJobOutputFile(ctx context.Context) (string, error) {
-	jobID, err := s.FindRunningJobByName(ctx, &FindRunningJobByNameRequest{
-		Name: JobName,
-		User: User,
-	})
-	if err != nil {
-		log.Printf("failed to get jobID: %s", err)
-	}
+func (s *Slurm) FindJobOutputFile(ctx context.Context, jobID int) (string, error) {
 
 	cmd := fmt.Sprintf("scontrol show job %d | sed -n 's/^\\s*StdOut=\\(.*\\)$/\\1/p'", jobID)
 	out, err := s.executor.ExecAs(ctx, s.adminUser, cmd)

@@ -2,8 +2,10 @@ package run
 
 import (
 	"errors"
+	"fmt"
 	"log"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strconv"
 	"time"
@@ -114,17 +116,10 @@ var Command = &cli.Command{
 			return err
 		}
 
-		_, err = try.Do(func() (string, error) {
-			if err := b.ProcessResults(ctx, outputFile); err != nil {
-				log.Printf("Failed to process results: %s", err)
-				return "", err
-			}
-
-			return "", nil
-		}, 10, 5*time.Second)
-
-		if err != nil {
-			log.Printf("Failed to process results: %s", err)
+		cmd := exec.Command("python3", "process_output.py", outputFile)
+		if err := cmd.Run(); err != nil {
+			fmt.Println("Error: ", err)
+			return err
 		}
 
 		return nil

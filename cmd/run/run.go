@@ -6,10 +6,12 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"time"
 
 	"github.com/squarefactory/benchmark-api/benchmark"
 	"github.com/squarefactory/benchmark-api/executor"
 	"github.com/squarefactory/benchmark-api/scheduler"
+	"github.com/squarefactory/benchmark-api/try"
 	"github.com/urfave/cli/v2"
 )
 
@@ -84,9 +86,45 @@ var Command = &cli.Command{
 			return err
 		}
 
-		if err := b.ProcessResults(ctx); err != nil {
-			log.Printf("Failed to process results: %s", err)
+		jobID, err := try.Do(func() (int, error) {
+			jobID, err := b.SlurmClient.FindRunningJobByName(
+				ctx,
+				&scheduler.FindRunningJobByNameRequest{
+					Name: benchmark.JobName,
+					User: benchmark.User,
+				},
+			)
+			if err == nil {
+				log.Print("benchmark is still running, unable to process results")
+				return 0, errors.New("benchmark is still running")
+			}
+
+			return jobID, nil
+		}, 60, 5*time.Minute)
+
+		if err != nil {
+			log.Printf("benchmark is still running, unable to process results")
 			return err
+		}
+		log.Printf("benchmark finished running, processing results now")
+
+		outputFile, err := b.SlurmClient.FindJobOutputFile(ctx, jobID)
+		if err != nil {
+			log.Printf("Unable to get outputFile path: %s", err)
+			return err
+		}
+
+		_, err = try.Do(func() (string, error) {
+			if err := b.ProcessResults(ctx, outputFile); err != nil {
+				log.Printf("Failed to process results: %s", err)
+				return "", err
+			}
+
+			return "", nil
+		}, 10, 5*time.Second)
+
+		if err != nil {
+			log.Printf("Failed to process results: %s", err)
 		}
 
 		return nil

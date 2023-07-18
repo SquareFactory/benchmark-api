@@ -3,18 +3,15 @@ package benchmark
 import (
 	"bytes"
 	"context"
-	"errors"
 	"log"
 	"math"
 	"os"
 	"regexp"
 	"strings"
 	"text/template"
-	"time"
 
 	"github.com/squarefactory/benchmark-api/resultparser"
 	"github.com/squarefactory/benchmark-api/scheduler"
-	"github.com/squarefactory/benchmark-api/try"
 )
 
 const (
@@ -37,43 +34,14 @@ func NewBenchmark(
 	}
 }
 
-// ProcessResults waits for the running benchmark to end and calls WriteResultsToCSV
-func (b *Benchmark) ProcessResults(ctx context.Context) error {
+func (b *Benchmark) ProcessResults(ctx context.Context, outputFile string) error {
 
-	jobID, err := try.Do(func() (int, error) {
-		jobID, err := b.SlurmClient.FindRunningJobByName(
-			ctx,
-			&scheduler.FindRunningJobByNameRequest{
-				Name: JobName,
-				User: User,
-			},
-		)
-		if err == nil {
-			log.Print("benchmark is still running, unable to process results")
-			return 0, errors.New("benchmark is still running")
-		}
-
-		return jobID, nil
-	}, 60, 5*time.Minute)
-
-	if err != nil {
-		log.Printf("benchmark is still running, unable to process results")
-		return err
-	}
-
-	outputFile, err := b.SlurmClient.FindJobOutputFile(ctx, jobID)
-	if err != nil {
-		log.Printf("Unable to get outputFile path: %s", err)
-		return err
-	}
-
-	log.Printf("benchmark finished running, processing results now")
 	if err := resultparser.WriteResultsToCSV(outputFile); err != nil {
-		log.Printf("failed to process results: %s", err)
+		log.Printf("Failed to process results: %s", err)
 		return err
 	}
 
-	log.Printf("successfully processed benchmark results")
+	log.Printf("Successfully processed benchamark results")
 	return nil
 }
 

@@ -18,7 +18,7 @@ func (*Shell) ExecAs(ctx context.Context, user string, cmd string) (string, erro
 		return "", err
 	}
 
-	c := exec.CommandContext(ctx, "sh", "-c", fmt.Sprintf("cd /tmp && %s", cmd))
+	c := exec.CommandContext(ctx, "sh", "-c", cmd)
 	fmt.Printf("exec: %+v\n", c.Args)
 	// Set the user ID for the command
 	c.SysProcAttr = &syscall.SysProcAttr{

@@ -12,9 +12,10 @@ import (
 )
 
 const (
-	User    = "root"
-	JobName = "HPL-Benchmark"
-	QosName = "benchmark"
+	User       = "root"
+	JobName    = "HPL-Benchmark"
+	QosName    = "benchmark"
+	OutputFile = "benchmark.log"
 )
 
 type Slurm struct {
@@ -49,12 +50,13 @@ func (s *Slurm) Submit(ctx context.Context, req *SubmitRequest) (string, error) 
 	cmd := fmt.Sprintf(`sbatch \
   --job-name=%s \
   --qos=%s \
-  --output=$(pwd)/benchmark-%%j_%%a.log \
+  --output=%s \
   --parsable << '%s'
 %s
 %s`,
 		req.Name,
 		QosName,
+		OutputFile,
 		eof,
 		req.Body,
 		eof,

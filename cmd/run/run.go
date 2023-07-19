@@ -81,13 +81,20 @@ var Command = &cli.Command{
 			return err
 		}
 
+		output, err := os.Create(scheduler.OutputFile)
+		if err != nil {
+			log.Printf("failed to create benchmark out file: %s", err)
+			return err
+		}
+		defer output.Close()
+
 		if err := b.Run(ctx, &files); err != nil {
 			log.Printf("Failed to run benchmark: %s", err)
 			return err
 		}
 
-		jobID, err := try.Do(func() (int, error) {
-			jobID, err := b.SlurmClient.FindRunningJobByName(
+		_, err = try.Do(func() (int, error) {
+			_, err := b.SlurmClient.FindRunningJobByName(
 				ctx,
 				&scheduler.FindRunningJobByNameRequest{
 					Name: benchmark.JobName,
@@ -99,7 +106,7 @@ var Command = &cli.Command{
 				return 0, errors.New("benchmark is still running")
 			}
 
-			return jobID, nil
+			return 0, nil
 		}, 60, 5*time.Minute)
 
 		if err != nil {
@@ -108,20 +115,9 @@ var Command = &cli.Command{
 		}
 		log.Printf("Benchmark finished running, fetching outputFile path")
 
-		outputFile, err := b.SlurmClient.FindJobOutputFile(ctx, jobID)
-		if err != nil {
-			log.Printf("Unable to get outputFile path: %s", err)
-			return err
-		}
-
-		_, err = os.Stat(outputFile)
-		if err != nil {
-			log.Printf("Failed to stat output file: %s", err)
-			return err
-		}
-
 		log.Printf("Processing results")
-		err = b.ProcessResults(ctx, outputFile)
+
+		err = b.ProcessResults(ctx, output.Name())
 		if err != nil {
 			log.Printf("Unable to process results: %s", err)
 			return err

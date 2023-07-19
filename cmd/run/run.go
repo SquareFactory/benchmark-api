@@ -2,10 +2,8 @@ package run
 
 import (
 	"errors"
-	"fmt"
 	"log"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"strconv"
 	"time"
@@ -105,10 +103,10 @@ var Command = &cli.Command{
 		}, 60, 5*time.Minute)
 
 		if err != nil {
-			log.Printf("benchmark is still running, unable to process results")
+			log.Printf("Benchmark is still running, unable to process results")
 			return err
 		}
-		log.Printf("benchmark finished running, processing results now")
+		log.Printf("Benchmark finished running, fetching outputFile path")
 
 		outputFile, err := b.SlurmClient.FindJobOutputFile(ctx, jobID)
 		if err != nil {
@@ -116,12 +114,18 @@ var Command = &cli.Command{
 			return err
 		}
 
-		cmd := exec.Command("python3", "process_output.py", outputFile)
-		if err := cmd.Run(); err != nil {
-			fmt.Println("Error: ", err)
+		_, err = os.Stat(outputFile)
+		if err != nil {
+			log.Printf("Failed to stat output file: %s", err)
 			return err
 		}
 
+		log.Printf("Processing results")
+		err = b.ProcessResults(ctx, outputFile)
+		if err != nil {
+			log.Printf("Unable to process results: %s", err)
+			return err
+		}
 		return nil
 	},
 }

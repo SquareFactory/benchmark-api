@@ -13,8 +13,8 @@ func TestWriteResultsToCSV(t *testing.T) {
 	tempInputFile := "/tmp/benchmark.log"
 	defer os.Remove(tempInputFile)
 
-	cleanData := `HPL_AI 1 1 1 1 0.001 10.0 1 1 9.5
-	HPL_AI 2 2 2 2 0.002 20.0 1 1 19.0`
+	cleanData := `HPL_AI WRC01 1 1 1 1 0.001 10.0 1 1 9.5
+	HPL_AI WRC01 2 2 2 2 0.002 20.0 1 1 19.0`
 
 	err := os.WriteFile(tempInputFile, []byte(cleanData), 0644)
 	require.NoError(t, err)

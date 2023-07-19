@@ -61,15 +61,15 @@ func WriteResultsToCSV(inputFile string) error {
 			fields := strings.Fields(line)
 
 			// Extract the required values
-			problemsize := fields[1]
-			nb := fields[2]
-			p := fields[3]
-			q := fields[4]
-			time := fields[5]
-			gflops := fields[6]
-			refine := fields[7]
-			iter := fields[8]
-			gflops_wrefinement := fields[9]
+			problemsize := fields[2]
+			nb := fields[3]
+			p := fields[4]
+			q := fields[5]
+			time := fields[6]
+			gflops := fields[7]
+			refine := fields[8]
+			iter := fields[9]
+			gflops_wrefinement := fields[10]
 
 			// Write the extracted values to the CSV file
 			record := []string{

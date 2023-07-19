@@ -4,46 +4,46 @@ TAG_NAME_DEV = $(shell git describe --tags --abbrev=0 2>/dev/null)
 GIT_COMMIT = $(shell git rev-parse --short=7 HEAD)
 VERSION = $(or ${TAG_NAME},$(TAG_NAME_DEV)-dev)
 
-bin/benchmark-api: $(GO_SRCS) set-version
+bin/benchmark-cli: $(GO_SRCS) set-version
 	CGO_ENABLED=0 go build -ldflags "-s -w" -o "$@" ./cmd/main.go
 
-bin/benchmark-api-darwin-amd64: $(GO_SRCS) set-version
+bin/benchmark-cli-darwin-amd64: $(GO_SRCS) set-version
 	CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build -ldflags "-s -w -X main.version=${VERSION}" -o "$@" ./cmd/main.go
 
-bin/benchmark-api-darwin-arm64: $(GO_SRCS) set-version
+bin/benchmark-cli-darwin-arm64: $(GO_SRCS) set-version
 	CGO_ENABLED=0 GOOS=darwin GOARCH=arm64 go build -ldflags "-s -w -X main.version=${VERSION}" -o "$@" ./cmd/main.go
 
-bin/benchmark-api-freebsd-amd64: $(GO_SRCS) set-version
+bin/benchmark-cli-freebsd-amd64: $(GO_SRCS) set-version
 	CGO_ENABLED=0 GOOS=freebsd GOARCH=amd64 go build -ldflags "-s -w -X main.version=${VERSION}" -o "$@" ./cmd/main.go
 
-bin/benchmark-api-freebsd-arm64: $(GO_SRCS) set-version
+bin/benchmark-cli-freebsd-arm64: $(GO_SRCS) set-version
 	CGO_ENABLED=0 GOOS=freebsd GOARCH=arm64 go build -ldflags "-s -w -X main.version=${VERSION}" -o "$@" ./cmd/main.go
 
-bin/benchmark-api-linux-amd64: $(GO_SRCS) set-version
+bin/benchmark-cli-linux-amd64: $(GO_SRCS) set-version
 	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags "-s -w -X main.version=${VERSION}" -o "$@" ./cmd/main.go
 
-bin/benchmark-api-linux-arm64: $(GO_SRCS) set-version
+bin/benchmark-cli-linux-arm64: $(GO_SRCS) set-version
 	CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build -ldflags "-s -w -X main.version=${VERSION}" -o "$@" ./cmd/main.go
 
-bin/benchmark-api-linux-mips64: $(GO_SRCS) set-version
+bin/benchmark-cli-linux-mips64: $(GO_SRCS) set-version
 	CGO_ENABLED=0 GOOS=linux GOARCH=mips64 go build -ldflags "-s -w -X main.version=${VERSION}" -o "$@" ./cmd/main.go
 
-bin/benchmark-api-linux-mips64le: $(GO_SRCS) set-version
+bin/benchmark-cli-linux-mips64le: $(GO_SRCS) set-version
 	CGO_ENABLED=0 GOOS=linux GOARCH=mips64le go build -ldflags "-s -w -X main.version=${VERSION}" -o "$@" ./cmd/main.go
 
-bin/benchmark-api-linux-ppc64: $(GO_SRCS) set-version
+bin/benchmark-cli-linux-ppc64: $(GO_SRCS) set-version
 	CGO_ENABLED=0 GOOS=linux GOARCH=ppc64 go build -ldflags "-s -w -X main.version=${VERSION}" -o "$@" ./cmd/main.go
 
-bin/benchmark-api-linux-ppc64le: $(GO_SRCS) set-version
+bin/benchmark-cli-linux-ppc64le: $(GO_SRCS) set-version
 	CGO_ENABLED=0 GOOS=linux GOARCH=ppc64le go build -ldflags "-s -w -X main.version=${VERSION}" -o "$@" ./cmd/main.go
 
-bin/benchmark-api-linux-riscv64: $(GO_SRCS) set-version
+bin/benchmark-cli-linux-riscv64: $(GO_SRCS) set-version
 	CGO_ENABLED=0 GOOS=linux GOARCH=riscv64 go build -ldflags "-s -w -X main.version=${VERSION}" -o "$@" ./cmd/main.go
 
-bin/benchmark-api-linux-s390x: $(GO_SRCS) set-version
+bin/benchmark-cli-linux-s390x: $(GO_SRCS) set-version
 	CGO_ENABLED=0 GOOS=linux GOARCH=s390x go build -ldflags "-s -w -X main.version=${VERSION}" -o "$@" ./cmd/main.go
 
-bins := benchmark-api-darwin-amd64 benchmark-api-darwin-arm64 benchmark-api-freebsd-arm64 benchmark-api-freebsd-arm64 benchmark-api-linux-amd64 benchmark-api-linux-arm64 benchmark-api-linux-mips64 benchmark-api-linux-mips64le benchmark-api-linux-ppc64 benchmark-api-linux-ppc64le benchmark-api-linux-riscv64 benchmark-api-linux-s390x
+bins := benchmark-cli-darwin-amd64 benchmark-cli-darwin-arm64 benchmark-cli-freebsd-arm64 benchmark-cli-freebsd-arm64 benchmark-cli-linux-amd64 benchmark-cli-linux-arm64 benchmark-cli-linux-mips64 benchmark-cli-linux-mips64le benchmark-cli-linux-ppc64 benchmark-cli-linux-ppc64le benchmark-cli-linux-riscv64 benchmark-cli-linux-s390x
 
 bin/checksums.txt: $(addprefix bin/,$(bins))
 	sha256sum -b $(addprefix bin/,$(bins)) | sed 's/bin\///' > $@

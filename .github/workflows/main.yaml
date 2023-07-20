@@ -1,4 +1,4 @@
-name: Benchmark API CI
+name: Benchmark CLI CI
 
 on:
   push:
@@ -66,7 +66,7 @@ jobs:
         run: go test -v -race -covermode=atomic -tags=unit -timeout=30s ./...
 
   build-export:
-    name: Build and export benchmark api
+    name: Build and export benchmark cli
     runs-on: ubuntu-latest
 
     needs: [lint, test]
@@ -118,7 +118,7 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           files: |
-            bin/benchmark-api-*
+            bin/benchmark-cli-*
             bin/checksums.txt
           body_path: bin/checksums.md
           tag_name: ${{ steps.branch_name.outputs.TAG_NAME }}

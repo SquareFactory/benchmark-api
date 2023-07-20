@@ -33,7 +33,7 @@ type BenchmarkFile struct {
 }
 
 type DATParams struct {
-	ProblemSize int
+	ProblemSize string
 	P           int
 	Q           int
 }

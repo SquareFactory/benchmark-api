@@ -7,6 +7,7 @@ import (
 	"math"
 	"os"
 	"regexp"
+	"strconv"
 	"strings"
 	"text/template"
 
@@ -15,12 +16,24 @@ import (
 )
 
 const (
-	User                         = "root"
-	benchmarkMemoryUsePercentage = 0.75
-	GBtoMB                       = 1000
-	JobName                      = "HPL-Benchmark"
-	DatFilePath                  = "hpl.dat"
+	User        = "root"
+	GBtoMB      = 1000
+	JobName     = "HPL-Benchmark"
+	DatFilePath = "hpl.dat"
 )
+
+var benchmarkMemoryUsePercentage = []float64{
+	0.75,
+	0.76,
+	0.77,
+	0.78,
+	0.79,
+	0.80,
+	0.81,
+	0.82,
+	0.83,
+	0.84,
+}
 
 func NewBenchmark(
 	dat DATParams,
@@ -106,7 +119,7 @@ func (b *Benchmark) GenerateDAT() (string, error) {
 	DATTmpl := template.Must(template.New("jobTemplate").Parse(DatTmpl))
 	var DatFile bytes.Buffer
 	if err := DATTmpl.Execute(&DatFile, struct {
-		ProblemSize int
+		ProblemSize string
 		P           int
 		Q           int
 	}{
@@ -252,9 +265,13 @@ func (b *Benchmark) CalculateProblemSize(ctx context.Context) error {
 		return err
 	}
 
-	b.Dat.ProblemSize = int(
-		math.Sqrt(float64(mem*b.Sbatch.Node)/8)*benchmarkMemoryUsePercentage,
-	) * GBtoMB
+	for _, values := range benchmarkMemoryUsePercentage {
+		problemSize := int(
+			math.Sqrt(float64(mem*b.Sbatch.Node)/8)*values,
+		) * GBtoMB
+
+		b.Dat.ProblemSize += strconv.Itoa(problemSize) + " "
+	}
 
 	return nil
 }

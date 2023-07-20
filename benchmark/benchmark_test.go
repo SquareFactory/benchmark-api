@@ -31,14 +31,14 @@ func (suite *ServiceTestSuite) BeforeTest(suiteName, testName string) {
 	suite.impl = &benchmark.Benchmark{
 		SlurmClient: suite.scheduler,
 		Dat: benchmark.DATParams{
-			ProblemSize: 1,
+			ProblemSize: "",
 			P:           2,
 			Q:           3,
 		},
 		Sbatch: benchmark.SBATCHParams{
 			ContainerPath: "/etc/hpl-benchmark/hpc-benchmarks:hpl.sqsh",
 			Workspace:     "/etc/hpl-benchmark",
-			Node:          4,
+			Node:          1,
 			NtasksPerNode: 2,
 			GpusPerNode:   2,
 			CpusPerTasks:  8,
@@ -83,8 +83,8 @@ func (suite *ServiceTestSuite) TestGenerateDAT() {
 Innovative Computing Laboratory, University of Tennessee
 HPL.out      output file name (if any)
 6            device out (6=stdout,7=stderr,file)
-1         # of problems sizes (N)
-1        Ns
+10         # of problems sizes (N)
+        Ns
 10           # of NBs
 64 128 224 256 384 512 640 768 896 1024  NBs
 0            PMAP process mapping (0=Row-,1=Column-major)
@@ -141,7 +141,7 @@ func (suite *ServiceTestSuite) TestGenerateSBATCH() {
 	// Arrange
 	expectedTemplate := `#!/bin/sh
 
-#SBATCH -N 4
+#SBATCH -N 1
 #SBATCH --ntasks-per-node=2
 #SBATCH --gpus-per-node=2
 #SBATCH --mem=0
@@ -179,7 +179,7 @@ srun  --mpi=pmix_v4 --cpu-bind=none --gpu-bind=none --container-image="/etc/hpl-
 
 func (suite *ServiceTestSuite) TestCalculateProcessGrid() {
 	// Arrange
-	P, Q := 2, 4
+	P, Q := 2, 2
 
 	suite.scheduler.On(
 		"FindGPUPerNode",
@@ -198,8 +198,7 @@ func (suite *ServiceTestSuite) TestCalculateProcessGrid() {
 
 func (suite *ServiceTestSuite) TestCalculateProblemSize() {
 	// Arrange
-	expectedMem := 190000
-
+	expectedMem := "95000 96000 97000 98000 100000 101000 102000 103000 105000 106000 "
 	suite.scheduler.On(
 		"FindMemPerNode",
 		mock.Anything,

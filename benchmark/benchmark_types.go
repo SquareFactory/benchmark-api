@@ -33,9 +33,12 @@ type BenchmarkFile struct {
 }
 
 type DATParams struct {
-	ProblemSize string
-	P           int
-	Q           int
+	NProblemSize int
+	ProblemSize  string
+	NBlockSize   int
+	BlockSize    string
+	P            int
+	Q            int
 }
 
 type SBATCHParams struct {

@@ -1,6 +1,7 @@
 package run
 
 import (
+	"context"
 	"errors"
 	"log"
 	"os"
@@ -10,6 +11,7 @@ import (
 
 	"github.com/squarefactory/benchmark-api/benchmark"
 	"github.com/squarefactory/benchmark-api/executor"
+	"github.com/squarefactory/benchmark-api/resultparser"
 	"github.com/squarefactory/benchmark-api/scheduler"
 	"github.com/squarefactory/benchmark-api/try"
 	"github.com/urfave/cli/v2"
@@ -64,8 +66,7 @@ var Command = &cli.Command{
 
 		containerPath := os.Getenv("CONTAINER_PATH")
 		workspace := filepath.Dir(containerPath)
-
-		b := benchmark.NewBenchmark(
+		firstSet := benchmark.NewBenchmark(
 			benchmark.DATParams{},
 			benchmark.SBATCHParams{
 				Node:          node,
@@ -75,53 +76,153 @@ var Command = &cli.Command{
 			scheduler.NewSlurm(&executor.Shell{}, user),
 		)
 
-		files, err := b.GenerateFiles(ctx)
+		log.Printf("running first set, with general parameters")
+		if err := RunFirstSet(firstSet, ctx); err != nil {
+			log.Printf("failed to run first set of benchmark: %s", err)
+			return err
+		}
+
+		log.Printf("first set finished running, processing results")
+
+		// Get optimal benchmark DAT parameters
+		optimalParams, err := ProcessFirstSet()
 		if err != nil {
-			log.Printf("Failed to generate benchmark files: %s", err)
+			log.Printf("failed to process first set: %s", err)
 			return err
 		}
 
-		output, err := os.Create(scheduler.OutputFile)
-		if err != nil {
-			log.Printf("failed to create benchmark out file: %s", err)
+		optimalSet := benchmark.NewBenchmark(
+			benchmark.DATParams{
+				ProblemSize: optimalParams.ProblemSize,
+				P:           optimalParams.P,
+				Q:           optimalParams.Q,
+			},
+			benchmark.SBATCHParams{
+				Node:          node,
+				ContainerPath: containerPath,
+				Workspace:     workspace,
+			},
+			scheduler.NewSlurm(&executor.Shell{}, user),
+		)
+
+		log.Printf("running second set, with optimal parameters")
+		if err := RunOptimalSet(optimalSet, ctx); err != nil {
+			log.Printf("failed to run second set of benchmark: %s", err)
 			return err
 		}
-		defer output.Close()
 
-		if err := b.Run(ctx, &files); err != nil {
-			log.Printf("Failed to run benchmark: %s", err)
-			return err
-		}
-
-		_, err = try.Do(func() (int, error) {
-			_, err := b.SlurmClient.FindRunningJobByName(
-				ctx,
-				&scheduler.FindRunningJobByNameRequest{
-					Name: benchmark.JobName,
-					User: benchmark.User,
-				},
-			)
-			if err == nil {
-				log.Print("benchmark is still running, unable to process results")
-				return 0, errors.New("benchmark is still running")
-			}
-
-			return 0, nil
-		}, 60, 5*time.Minute)
-
-		if err != nil {
-			log.Printf("Benchmark is still running, unable to process results")
-			return err
-		}
-		log.Printf("Benchmark finished running, fetching outputFile path")
-
-		log.Printf("Processing results")
-
-		err = b.ProcessResults(ctx, output.Name())
-		if err != nil {
-			log.Printf("Unable to process results: %s", err)
-			return err
-		}
 		return nil
 	},
+}
+
+func RunFirstSet(b *benchmark.Benchmark, ctx context.Context) error {
+
+	if err := b.CalculateBenchmarkParams(ctx); err != nil {
+		log.Printf("failed to calculate first set parameters")
+		return err
+	}
+
+	files, err := b.GenerateFiles(ctx)
+	if err != nil {
+		log.Printf("Failed to generate benchmark files: %s", err)
+		return err
+	}
+
+	output, err := os.Create(scheduler.OutputFile)
+	if err != nil {
+		log.Printf("failed to create output file: %s", err)
+		return err
+	}
+	defer output.Close()
+
+	if err := b.Run(ctx, &files); err != nil {
+		log.Printf("Failed to run benchmark: %s", err)
+		return err
+	}
+
+	_, err = try.Do(func() (int, error) {
+		_, err := b.SlurmClient.FindRunningJobByName(
+			ctx,
+			&scheduler.FindRunningJobByNameRequest{
+				Name: benchmark.JobName,
+				User: benchmark.User,
+			},
+		)
+		if err == nil {
+			log.Print("benchmark is still running, unable to process results")
+			return 0, errors.New("benchmark is still running")
+		}
+
+		return 0, nil
+	}, 60, 5*time.Minute)
+
+	if err != nil {
+		log.Printf("Benchmark is still running, unable to process results")
+		return err
+	}
+
+	return nil
+}
+
+func ProcessFirstSet() (benchmark.DATParams, error) {
+
+	if err := resultparser.WriteResultsToCSV(scheduler.OutputFile); err != nil {
+		log.Printf("Failed to process results: %s", err)
+		return benchmark.DATParams{}, err
+	}
+
+	optimalRow, err := resultparser.FindMaxGflopsRow(scheduler.OutputFile)
+	if err != nil {
+		log.Printf("Failed to find row containing max gflops score: %s", err)
+		return benchmark.DATParams{}, err
+	}
+
+	p, err := strconv.Atoi(optimalRow[2])
+	if err != nil {
+		log.Printf("failed to convert %s as integer: %s", optimalRow[2], err)
+		return benchmark.DATParams{}, err
+	}
+
+	q, err := strconv.Atoi(optimalRow[3])
+	if err != nil {
+		log.Printf("failed to convert %s as integer: %s", optimalRow[2], err)
+		return benchmark.DATParams{}, err
+	}
+
+	return benchmark.DATParams{
+		NProblemSize: 1,
+		ProblemSize:  optimalRow[0],
+		NBlockSize:   1,
+		BlockSize:    optimalRow[1],
+		P:            p,
+		Q:            q,
+	}, nil
+}
+
+func RunOptimalSet(b *benchmark.Benchmark, ctx context.Context) error {
+
+	if err := b.CalculateSBATCHParams(ctx); err != nil {
+		log.Printf("failed to calculate sbatch params for optimal set: %s", err)
+		return err
+	}
+
+	files, err := b.GenerateFiles(ctx)
+	if err != nil {
+		log.Printf("Failed to generate benchmark files: %s", err)
+		return err
+	}
+
+	output, err := os.Create(scheduler.OutputFile)
+	if err != nil {
+		log.Printf("failed to create output file: %s", err)
+		return err
+	}
+	defer output.Close()
+
+	if err := b.Run(ctx, &files); err != nil {
+		log.Printf("Failed to run benchmark: %s", err)
+		return err
+	}
+
+	return nil
 }

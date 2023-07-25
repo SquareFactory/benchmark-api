@@ -199,6 +199,9 @@ func (b *Benchmark) CalculateDATParams(ctx context.Context) error {
 		return err
 	}
 
+	b.Dat.NBlockSize = 10
+	b.Dat.BlockSize = "64 128 224 256 384 512 640 768 896 1024"
+
 	return nil
 }
 
@@ -262,6 +265,7 @@ func (b *Benchmark) CalculateProblemSize(ctx context.Context) error {
 		return err
 	}
 
+	b.Dat.NProblemSize = len(benchmarkMemoryUsePercentage)
 	for _, values := range benchmarkMemoryUsePercentage {
 		problemSize := int(
 			math.Sqrt(float64(mem*b.Sbatch.Node)/8)*values,

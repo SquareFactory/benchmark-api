@@ -18,9 +18,10 @@ import (
 )
 
 const (
-	user             = "root"
-	firstSetResults  = "first_set.csv"
-	secondSetResults = "second_set.csv"
+	user                 = "root"
+	firstSetResults      = "first_set.csv"
+	secondSetResults     = "second_set.csv"
+	benchmarkInSecondSet = 10
 )
 
 var flags = []cli.Flag{
@@ -86,7 +87,6 @@ var Command = &cli.Command{
 
 		log.Printf("first set finished running, processing results")
 
-		// Get optimal benchmark DAT parameters
 		optimalParams, err := ProcessFirstSet()
 		if err != nil {
 			log.Printf("failed to process first set: %s", err)
@@ -224,36 +224,37 @@ func RunSecondSet(b *benchmark.Benchmark, ctx context.Context) error {
 	}
 	defer output.Close()
 
-	if err := b.Run(ctx, &files); err != nil {
-		log.Printf("Failed to run benchmark: %s", err)
-		return err
-	}
-
-	_, err = try.Do(func() (int, error) {
-		_, err := b.SlurmClient.FindRunningJobByName(
-			ctx,
-			&scheduler.FindRunningJobByNameRequest{
-				Name: benchmark.JobName,
-				User: benchmark.User,
-			},
-		)
-		if err == nil {
-			log.Print("benchmark is still running, unable to process results")
-			return 0, errors.New("benchmark is still running")
+	for i := 0; i < benchmarkInSecondSet; i++ {
+		if err := b.Run(ctx, &files); err != nil {
+			log.Printf("Failed to run benchmark: %s", err)
+			return err
 		}
 
-		return 0, nil
-	}, 10, 2*time.Minute)
+		_, err = try.Do(func() (int, error) {
+			_, err := b.SlurmClient.FindRunningJobByName(
+				ctx,
+				&scheduler.FindRunningJobByNameRequest{
+					Name: benchmark.JobName,
+					User: benchmark.User,
+				},
+			)
+			if err == nil {
+				log.Print("benchmark is still running, unable to process results")
+				return 0, errors.New("benchmark is still running")
+			}
 
-	if err != nil {
-		log.Printf("Benchmark is still running, unable to process results")
-		return err
+			return 0, nil
+		}, 10, 2*time.Minute)
+
+		if err != nil {
+			log.Printf("Benchmark is still running, unable to process results")
+			return err
+		}
+
+		if err := resultparser.AppendResultsToCsv(scheduler.JobOutput, secondSetResults); err != nil {
+			log.Printf("Failed to process results: %s", err)
+			return err
+		}
 	}
-
-	if err := resultparser.AppendResultsToCsv(scheduler.JobOutput, secondSetResults); err != nil {
-		log.Printf("Failed to process results: %s", err)
-		return err
-	}
-
 	return nil
 }

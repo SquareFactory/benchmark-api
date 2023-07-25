@@ -21,25 +21,28 @@ func TestWriteResultsToCSV(t *testing.T) {
 	require.NoError(t, err)
 
 	tests := []struct {
-		name    string
-		input   string
-		wantErr bool
+		name       string
+		resultFile string
+		csvFile    string
+		wantErr    bool
 	}{
 		{
-			name:    "Positive test",
-			input:   "/tmp/benchmark.log",
-			wantErr: false,
+			name:       "Positive test",
+			resultFile: "/tmp/benchmark.log",
+			csvFile:    "benchmark.log",
+			wantErr:    false,
 		},
 
 		{
-			name:    "File does not exist",
-			input:   "/tmp/non_existing_file.txt",
-			wantErr: true,
+			name:       "File does not exist",
+			resultFile: "/tmp/non_existing_file.txt",
+			csvFile:    "benchmark.log",
+			wantErr:    true,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if err := resultparser.WriteResultsToCSV(tt.input); (err != nil) != tt.wantErr {
+			if err := resultparser.WriteResultsToCSV(tt.resultFile, tt.csvFile); (err != nil) != tt.wantErr {
 				t.Errorf("WriteResultsToCSV() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})

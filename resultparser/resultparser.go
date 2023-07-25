@@ -9,12 +9,10 @@ import (
 	"strings"
 )
 
-const CsvFile = "benchmark.csv"
-
-func WriteResultsToCSV(inputFile string) error {
+func WriteResultsToCSV(resultFile, csvFile string) error {
 
 	// Read the input file contents
-	inputBytes, err := os.ReadFile(inputFile)
+	inputBytes, err := os.ReadFile(resultFile)
 	if err != nil {
 		log.Printf("Failed to read input file: %s", err)
 		return err
@@ -27,15 +25,52 @@ func WriteResultsToCSV(inputFile string) error {
 	lines := strings.Split(inputData, "\n")
 
 	// Create the output file
-	output, err := os.Create(CsvFile)
+	output, err := os.Create(csvFile)
 	if err != nil {
 		log.Printf("Failed to create output file: %s", err)
 		return err
 	}
 	defer output.Close()
 
-	// Create a CSV writer
-	writer := csv.NewWriter(output)
+	if err := WriteDataAsCsvRecord(output, lines); err != nil {
+		log.Printf("failed to write data in csv format: %s", err)
+		return err
+	}
+
+	log.Printf("Data has been successfully written to %s", csvFile)
+	return nil
+}
+
+func AppendResultsToCsv(resultFile, csvFile string) error {
+	// Read the input file contents
+	inputBytes, err := os.ReadFile(resultFile)
+	if err != nil {
+		log.Printf("Failed to read input file: %s", err)
+		return err
+	}
+
+	inputData := string(inputBytes)
+	lines := strings.Split(inputData, "\n")
+
+	output, err := os.OpenFile(csvFile, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0644)
+	if err != nil {
+		log.Printf("Failed to open CSV file: %s", err)
+		return err
+	}
+	defer output.Close()
+
+	if err := WriteDataAsCsvRecord(output, lines); err != nil {
+		log.Printf("failed to write data in csv format: %s", err)
+		return err
+	}
+
+	log.Printf("Data has been successfully appended to %s", csvFile)
+	return nil
+}
+
+func WriteDataAsCsvRecord(file *os.File, lines []string) error {
+
+	writer := csv.NewWriter(file)
 	defer writer.Flush()
 
 	header := []string{
@@ -49,7 +84,7 @@ func WriteResultsToCSV(inputFile string) error {
 		"Iter",
 		"Gflops_wrefinement",
 	}
-	err = writer.Write(header)
+	err := writer.Write(header)
 	if err != nil {
 		log.Printf("Failed to write CSV header: %s", err)
 		return err
@@ -86,27 +121,26 @@ func WriteResultsToCSV(inputFile string) error {
 				gflops_wrefinement,
 			}
 
-			err = writer.Write(record)
+			err := writer.Write(record)
 			if err != nil {
 				log.Printf("Failed to write CSV record: %s", err)
 				return err
 			}
 		}
 	}
-
-	log.Printf("Data has been successfully written to %s", CsvFile)
 	return nil
+
 }
 
-func FindMaxGflopsRow(inputFile string) ([]string, error) {
-	csvFile, err := os.Open(inputFile)
+func FindMaxGflopsRow(csvFile string) ([]string, error) {
+	file, err := os.Open(csvFile)
 	if err != nil {
 		fmt.Println("Error opening the CSV file:", err)
 		return nil, err
 	}
-	defer csvFile.Close()
+	defer file.Close()
 
-	reader := csv.NewReader(csvFile)
+	reader := csv.NewReader(file)
 	records, err := reader.ReadAll()
 	if err != nil {
 		fmt.Println("Error reading CSV records:", err)

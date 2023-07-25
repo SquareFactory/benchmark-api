@@ -18,7 +18,9 @@ import (
 )
 
 const (
-	user = "root"
+	user             = "root"
+	firstSetResults  = "first_set.csv"
+	secondSetResults = "second_set.csv"
 )
 
 var flags = []cli.Flag{
@@ -109,7 +111,7 @@ var Command = &cli.Command{
 		)
 
 		log.Printf("running second set, with optimal parameters")
-		if err := RunOptimalSet(optimalSet, ctx); err != nil {
+		if err := RunSecondSet(optimalSet, ctx); err != nil {
 			log.Printf("failed to run second set of benchmark: %s", err)
 			return err
 		}
@@ -169,12 +171,12 @@ func RunFirstSet(b *benchmark.Benchmark, ctx context.Context) error {
 
 func ProcessFirstSet() (benchmark.DATParams, error) {
 
-	if err := resultparser.WriteResultsToCSV(scheduler.JobOutput); err != nil {
+	if err := resultparser.WriteResultsToCSV(scheduler.JobOutput, firstSetResults); err != nil {
 		log.Printf("Failed to process results: %s", err)
 		return benchmark.DATParams{}, err
 	}
 
-	optimalRow, err := resultparser.FindMaxGflopsRow(resultparser.CsvFile)
+	optimalRow, err := resultparser.FindMaxGflopsRow(firstSetResults)
 	if err != nil {
 		log.Printf("Failed to find row containing max gflops score: %s", err)
 		return benchmark.DATParams{}, err
@@ -202,7 +204,7 @@ func ProcessFirstSet() (benchmark.DATParams, error) {
 	}, nil
 }
 
-func RunOptimalSet(b *benchmark.Benchmark, ctx context.Context) error {
+func RunSecondSet(b *benchmark.Benchmark, ctx context.Context) error {
 
 	if err := b.CalculateSBATCHParams(ctx); err != nil {
 		log.Printf("failed to calculate sbatch params for optimal set: %s", err)
@@ -224,6 +226,32 @@ func RunOptimalSet(b *benchmark.Benchmark, ctx context.Context) error {
 
 	if err := b.Run(ctx, &files); err != nil {
 		log.Printf("Failed to run benchmark: %s", err)
+		return err
+	}
+
+	_, err = try.Do(func() (int, error) {
+		_, err := b.SlurmClient.FindRunningJobByName(
+			ctx,
+			&scheduler.FindRunningJobByNameRequest{
+				Name: benchmark.JobName,
+				User: benchmark.User,
+			},
+		)
+		if err == nil {
+			log.Print("benchmark is still running, unable to process results")
+			return 0, errors.New("benchmark is still running")
+		}
+
+		return 0, nil
+	}, 10, 2*time.Minute)
+
+	if err != nil {
+		log.Printf("Benchmark is still running, unable to process results")
+		return err
+	}
+
+	if err := resultparser.AppendResultsToCsv(scheduler.JobOutput, secondSetResults); err != nil {
+		log.Printf("Failed to process results: %s", err)
 		return err
 	}
 

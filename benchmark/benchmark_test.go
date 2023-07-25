@@ -31,9 +31,12 @@ func (suite *ServiceTestSuite) BeforeTest(suiteName, testName string) {
 	suite.impl = &benchmark.Benchmark{
 		SlurmClient: suite.scheduler,
 		Dat: benchmark.DATParams{
-			ProblemSize: "",
-			P:           2,
-			Q:           3,
+			ProblemSize:  "",
+			P:            2,
+			Q:            3,
+			NProblemSize: 1,
+			NBlockSize:   1,
+			BlockSize:    "64",
 		},
 		Sbatch: benchmark.SBATCHParams{
 			ContainerPath: "/etc/hpl-benchmark/hpc-benchmarks:hpl.sqsh",
@@ -83,10 +86,10 @@ func (suite *ServiceTestSuite) TestGenerateDAT() {
 Innovative Computing Laboratory, University of Tennessee
 HPL.out      output file name (if any)
 6            device out (6=stdout,7=stderr,file)
-10         # of problems sizes (N)
-        Ns
-10           # of NBs
-64 128 224 256 384 512 640 768 896 1024  NBs
+1 # of problems sizes (N)
+  Ns
+1   # of NBs
+64    NBs
 0            PMAP process mapping (0=Row-,1=Column-major)
 1            # of process grids (P x Q)
 2     Ps

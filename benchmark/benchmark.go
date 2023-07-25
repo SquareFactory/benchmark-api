@@ -101,13 +101,19 @@ func (b *Benchmark) GenerateDAT() (string, error) {
 	DATTmpl := template.Must(template.New("jobTemplate").Parse(DatTmpl))
 	var DatFile bytes.Buffer
 	if err := DATTmpl.Execute(&DatFile, struct {
-		ProblemSize string
-		P           int
-		Q           int
+		NProblemSize int
+		ProblemSize  string
+		NBlockSize   int
+		BlockSize    string
+		P            int
+		Q            int
 	}{
-		ProblemSize: b.Dat.ProblemSize,
-		P:           b.Dat.P,
-		Q:           b.Dat.Q,
+		NProblemSize: b.Dat.NProblemSize,
+		ProblemSize:  b.Dat.ProblemSize,
+		NBlockSize:   b.Dat.NBlockSize,
+		BlockSize:    b.Dat.BlockSize,
+		P:            b.Dat.P,
+		Q:            b.Dat.Q,
 	}); err != nil {
 		log.Printf("dat templating failed: %s", err)
 		return "", err

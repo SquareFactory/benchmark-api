@@ -22,4 +22,6 @@ Then, you can launch a benchmark by using the run command. Example for a single 
 ./benchmark run 1
 ```
 
-The results are exported in the benchmark.csv file, in the same directory as the executable.
+The tool will launch a 1st set of benchmark, to determine the ideal parameters for maximum performance.
+Then, it will run a second set of 10 benchmarks, using those parameters.
+The results are exported in the first_set.csv and second_set.csv files, in the same directory as the binary.

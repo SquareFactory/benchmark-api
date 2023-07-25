@@ -93,9 +93,12 @@ var Command = &cli.Command{
 
 		optimalSet := benchmark.NewBenchmark(
 			benchmark.DATParams{
-				ProblemSize: optimalParams.ProblemSize,
-				P:           optimalParams.P,
-				Q:           optimalParams.Q,
+				NProblemSize: optimalParams.NProblemSize,
+				ProblemSize:  optimalParams.ProblemSize,
+				NBlockSize:   optimalParams.NBlockSize,
+				BlockSize:    optimalParams.BlockSize,
+				P:            optimalParams.P,
+				Q:            optimalParams.Q,
 			},
 			benchmark.SBATCHParams{
 				Node:          node,

@@ -128,7 +128,7 @@ func RunFirstSet(b *benchmark.Benchmark, ctx context.Context) error {
 		return err
 	}
 
-	output, err := os.Create(scheduler.OutputFile)
+	output, err := os.Create(scheduler.JobOutput)
 	if err != nil {
 		log.Printf("failed to create output file: %s", err)
 		return err
@@ -166,12 +166,12 @@ func RunFirstSet(b *benchmark.Benchmark, ctx context.Context) error {
 
 func ProcessFirstSet() (benchmark.DATParams, error) {
 
-	if err := resultparser.WriteResultsToCSV(scheduler.OutputFile); err != nil {
+	if err := resultparser.WriteResultsToCSV(scheduler.JobOutput); err != nil {
 		log.Printf("Failed to process results: %s", err)
 		return benchmark.DATParams{}, err
 	}
 
-	optimalRow, err := resultparser.FindMaxGflopsRow(scheduler.OutputFile)
+	optimalRow, err := resultparser.FindMaxGflopsRow(resultparser.CsvFile)
 	if err != nil {
 		log.Printf("Failed to find row containing max gflops score: %s", err)
 		return benchmark.DATParams{}, err
@@ -212,7 +212,7 @@ func RunOptimalSet(b *benchmark.Benchmark, ctx context.Context) error {
 		return err
 	}
 
-	output, err := os.Create(scheduler.OutputFile)
+	output, err := os.Create(scheduler.JobOutput)
 	if err != nil {
 		log.Printf("failed to create output file: %s", err)
 		return err

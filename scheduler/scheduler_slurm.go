@@ -12,10 +12,10 @@ import (
 )
 
 const (
-	User       = "root"
-	JobName    = "HPL-Benchmark"
-	QosName    = "benchmark"
-	OutputFile = "benchmark.log"
+	User      = "root"
+	JobName   = "HPL-Benchmark"
+	QosName   = "benchmark"
+	JobOutput = "benchmark.log"
 )
 
 type Slurm struct {
@@ -56,7 +56,7 @@ func (s *Slurm) Submit(ctx context.Context, req *SubmitRequest) (string, error) 
 %s`,
 		req.Name,
 		QosName,
-		OutputFile,
+		JobOutput,
 		eof,
 		req.Body,
 		eof,

@@ -9,7 +9,7 @@ import (
 	"strings"
 )
 
-var outputFile = "benchmark.csv"
+const CsvFile = "benchmark.csv"
 
 func WriteResultsToCSV(inputFile string) error {
 
@@ -27,7 +27,7 @@ func WriteResultsToCSV(inputFile string) error {
 	lines := strings.Split(inputData, "\n")
 
 	// Create the output file
-	output, err := os.Create(outputFile)
+	output, err := os.Create(CsvFile)
 	if err != nil {
 		log.Printf("Failed to create output file: %s", err)
 		return err
@@ -94,7 +94,7 @@ func WriteResultsToCSV(inputFile string) error {
 		}
 	}
 
-	log.Printf("Data has been successfully written to %s", outputFile)
+	log.Printf("Data has been successfully written to %s", CsvFile)
 	return nil
 }
 

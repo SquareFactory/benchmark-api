@@ -11,7 +11,6 @@ import (
 	"strings"
 	"text/template"
 
-	"github.com/squarefactory/benchmark-api/resultparser"
 	"github.com/squarefactory/benchmark-api/scheduler"
 )
 
@@ -47,17 +46,6 @@ func NewBenchmark(
 	}
 }
 
-func (b *Benchmark) ProcessResults(ctx context.Context, outputFile string) error {
-
-	if err := resultparser.WriteResultsToCSV(outputFile); err != nil {
-		log.Printf("Failed to process results: %s", err)
-		return err
-	}
-
-	log.Printf("Successfully processed benchamark results")
-	return nil
-}
-
 func (b *Benchmark) Run(ctx context.Context, files *BenchmarkFile) error {
 
 	if err := os.WriteFile(DatFilePath, []byte(files.DatFile), 0644); err != nil {
@@ -80,17 +68,12 @@ func (b *Benchmark) Run(ctx context.Context, files *BenchmarkFile) error {
 
 func (b *Benchmark) GenerateFiles(ctx context.Context) (BenchmarkFile, error) {
 
-	if err := b.CalculateBenchmarkParams(ctx); err != nil {
-		log.Printf("Failed to generate benchmark parameters: %s", err)
-		return BenchmarkFile{}, err
-	}
-
 	DatFile, err := b.GenerateDAT()
 	if err != nil {
 		log.Printf("Failed to generate DAT file: %s", err)
 		return BenchmarkFile{}, err
-	}
 
+	}
 	var SbatchFile string
 
 	if b.Sbatch.Node != 1 {
@@ -115,7 +98,6 @@ func (b *Benchmark) GenerateFiles(ctx context.Context) (BenchmarkFile, error) {
 
 func (b *Benchmark) GenerateDAT() (string, error) {
 
-	// Templating gpu mining job
 	DATTmpl := template.Must(template.New("jobTemplate").Parse(DatTmpl))
 	var DatFile bytes.Buffer
 	if err := DATTmpl.Execute(&DatFile, struct {
@@ -136,7 +118,6 @@ func (b *Benchmark) GenerateDAT() (string, error) {
 
 func (b *Benchmark) GenerateMultiNodeSBATCH() (string, error) {
 
-	// Templating gpu mining job
 	SbatchTmpl := template.Must(template.New("jobTemplate").Parse(MultiNodeTmpl))
 	var SbatchFile bytes.Buffer
 	if err := SbatchTmpl.Execute(&SbatchFile, struct {
@@ -167,7 +148,6 @@ func (b *Benchmark) GenerateMultiNodeSBATCH() (string, error) {
 }
 
 func (b *Benchmark) GenerateSingleNodeSBATCH() (string, error) {
-	// Templating gpu mining job
 	SbatchTmpl := template.Must(template.New("jobTemplate").Parse(SingleNodeTmpl))
 	var SbatchFile bytes.Buffer
 	if err := SbatchTmpl.Execute(&SbatchFile, struct {
@@ -196,8 +176,21 @@ func (b *Benchmark) GenerateSingleNodeSBATCH() (string, error) {
 	return SbatchFile.String(), nil
 }
 
-// Returns a benchmark and all its parameters
 func (b *Benchmark) CalculateBenchmarkParams(ctx context.Context) error {
+	if err := b.CalculateDATParams(ctx); err != nil {
+		log.Printf("Failed to calculate dat params: %s", err)
+		return err
+	}
+
+	if err := b.CalculateSBATCHParams(ctx); err != nil {
+		log.Printf("Failed to calculate sbatch params: %s", err)
+		return err
+	}
+
+	return nil
+}
+
+func (b *Benchmark) CalculateDATParams(ctx context.Context) error {
 	if err := b.CalculateProblemSize(ctx); err != nil {
 		return err
 	}
@@ -206,6 +199,10 @@ func (b *Benchmark) CalculateBenchmarkParams(ctx context.Context) error {
 		return err
 	}
 
+	return nil
+}
+
+func (b *Benchmark) CalculateSBATCHParams(ctx context.Context) error {
 	b.Sbatch.NtasksPerNode = b.Dat.P * b.Dat.Q / b.Sbatch.Node
 	CpusPerNode, err := b.SlurmClient.FindCPUPerNode(ctx)
 	if err != nil {
@@ -225,7 +222,7 @@ func (b *Benchmark) CalculateBenchmarkParams(ctx context.Context) error {
 	return nil
 }
 
-// Calculates the optimal values of P and Q based on the number of GPUs available per snodes
+// Calculates the optimal values of P and Q based on the number of GPUs available per nodes
 func (b *Benchmark) CalculateProcessGrid(ctx context.Context) error {
 
 	numGPUs, err := b.SlurmClient.FindGPUPerNode(ctx)

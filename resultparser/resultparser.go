@@ -2,8 +2,10 @@ package resultparser
 
 import (
 	"encoding/csv"
+	"fmt"
 	"log"
 	"os"
+	"strconv"
 	"strings"
 )
 
@@ -94,4 +96,38 @@ func WriteResultsToCSV(inputFile string) error {
 
 	log.Printf("Data has been successfully written to %s", outputFile)
 	return nil
+}
+
+func FindMaxGflopsRow(inputFile string) ([]string, error) {
+	csvFile, err := os.Open(inputFile)
+	if err != nil {
+		fmt.Println("Error opening the CSV file:", err)
+		return nil, err
+	}
+	defer csvFile.Close()
+
+	reader := csv.NewReader(csvFile)
+	records, err := reader.ReadAll()
+	if err != nil {
+		fmt.Println("Error reading CSV records:", err)
+		return nil, err
+	}
+
+	var maxGflops float64 = -1
+	var maxGflopsRow []string
+
+	for _, row := range records {
+		gflops, err := strconv.ParseFloat(row[5], 64) // Gflops is in the 6th column (index 5)
+		if err != nil {
+			fmt.Println("Error converting Gflops to float:", err)
+			continue
+		}
+
+		if gflops > maxGflops {
+			maxGflops = gflops
+			maxGflopsRow = row
+		}
+	}
+
+	return maxGflopsRow, nil
 }

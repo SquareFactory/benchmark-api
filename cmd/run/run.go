@@ -21,7 +21,7 @@ const (
 	user                 = "root"
 	firstSetResults      = "first_set.csv"
 	secondSetResults     = "second_set.csv"
-	benchmarkInSecondSet = 10
+	benchmarkInSecondSet = 20
 )
 
 var flags = []cli.Flag{

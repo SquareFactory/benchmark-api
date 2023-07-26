@@ -171,6 +171,11 @@ func RunFirstSet(b *benchmark.Benchmark, ctx context.Context) error {
 
 func ProcessFirstSet() (benchmark.DATParams, error) {
 
+	if err := resultparser.WriteHeaderToCsv(firstSetResults, resultparser.CsvHeader); err != nil {
+		log.Printf("Failed to write header to csv: %s", err)
+		return benchmark.DATParams{}, err
+	}
+
 	if err := resultparser.WriteResultsToCSV(scheduler.JobOutput, firstSetResults); err != nil {
 		log.Printf("Failed to process results: %s", err)
 		return benchmark.DATParams{}, err
@@ -223,6 +228,11 @@ func RunSecondSet(b *benchmark.Benchmark, ctx context.Context) error {
 		return err
 	}
 	defer output.Close()
+
+	if err := resultparser.WriteHeaderToCsv(secondSetResults, resultparser.CsvHeader); err != nil {
+		log.Printf("Failed to write header to csv: %s", err)
+		return err
+	}
 
 	for i := 0; i < benchmarkInSecondSet; i++ {
 		if err := b.Run(ctx, &files); err != nil {

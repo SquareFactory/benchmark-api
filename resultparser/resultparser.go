@@ -9,6 +9,18 @@ import (
 	"strings"
 )
 
+var CsvHeader = []string{
+	"ProblemSize",
+	"NB",
+	"P",
+	"Q",
+	"Time",
+	"Gflops",
+	"Refine",
+	"Iter",
+	"Gflops_wrefinement",
+}
+
 func WriteResultsToCSV(resultFile, csvFile string) error {
 
 	// Read the input file contents
@@ -38,6 +50,26 @@ func WriteResultsToCSV(resultFile, csvFile string) error {
 	}
 
 	log.Printf("Data has been successfully written to %s", csvFile)
+	return nil
+}
+
+func WriteHeaderToCsv(csvFile string, header []string) error {
+
+	output, err := os.OpenFile(csvFile, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0644)
+	if err != nil {
+		log.Printf("Failed to open CSV file: %s", err)
+		return err
+	}
+	defer output.Close()
+
+	writer := csv.NewWriter(output)
+	defer writer.Flush()
+
+	if err := writer.Write(header); err != nil {
+		log.Printf("Failed to write CSV header: %s", err)
+		return err
+	}
+
 	return nil
 }
 
@@ -72,23 +104,6 @@ func WriteDataAsCsvRecord(file *os.File, lines []string) error {
 
 	writer := csv.NewWriter(file)
 	defer writer.Flush()
-
-	header := []string{
-		"ProblemSize",
-		"NB",
-		"P",
-		"Q",
-		"Time",
-		"Gflops",
-		"Refine",
-		"Iter",
-		"Gflops_wrefinement",
-	}
-	err := writer.Write(header)
-	if err != nil {
-		log.Printf("Failed to write CSV header: %s", err)
-		return err
-	}
 
 	// Process each line and extract the required values
 	for _, line := range lines {
